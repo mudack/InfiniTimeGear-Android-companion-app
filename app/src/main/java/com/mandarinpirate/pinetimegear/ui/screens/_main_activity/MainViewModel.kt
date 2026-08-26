@@ -34,7 +34,6 @@ import kotlin.reflect.KClass
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val stringProvider: StringProvider,
     private val bluetoothManager: BluetoothManager,
     private val bleScannerRepo: BleScannerRepo
 ) : ViewModel() {
@@ -70,18 +69,19 @@ class MainViewModel @Inject constructor(
                 when (uiState.value.fabState) {
                     MainScreenFabState.ISSUE -> _uiState.update {
                         it.copy(
-                            alertDialog = AlertDialogData( //todo make sharedFlow to make issue container blink to let user know that it should be fixed
-                                title = stringProvider.getString(R.string.alert_title_issue_exists),
-                                message = stringProvider.getString(R.string.alert_message_issue_exists),
-                                btnText = stringProvider.getString(android.R.string.ok),
-                                btnOnClick = {
-                                    _uiState.update { currentState ->
-                                        currentState.copy(
-                                            alertDialog = null
-                                        )
-                                    }
-                                }
-                            )
+                            alertDialog = AlertDialogState.ISSUE_EXISTS
+//                                AlertDialogData( //todo make sharedFlow to make issue container blink to let user know that it should be fixed
+//                                title = stringProvider.getString(R.string.alert_title_issue_exists),
+//                                message = stringProvider.getString(R.string.alert_message_issue_exists),
+//                                btnText = stringProvider.getString(android.R.string.ok),
+//                                btnOnClick = {
+//                                    _uiState.update { currentState ->
+//                                        currentState.copy(
+//                                            alertDialog = null
+//                                        )
+//                                    }
+//                                }
+//                            )
                         )
                     }
 
@@ -145,7 +145,7 @@ class MainViewModel @Inject constructor(
                 }
             }
 
-            is MainEvent.DismissAlertDialog -> _uiState.update { it.copy(alertDialog = null) }
+            is MainEvent.DismissAlertDialog -> _uiState.update { it.copy(alertDialog = AlertDialogState.NONE) }
             is MainEvent.ShowUpAlertDialog -> _uiState.update { it.copy(alertDialog = event.alertDialogData) } //todo btnOnClick set in another way, i don't like this way
 
             MainEvent.OnAllPermissionAreGranted -> {
@@ -154,7 +154,7 @@ class MainViewModel @Inject constructor(
                     .toMutableMap()
                 _uiState.update {
                     it.copy(
-                        alertDialog = null,
+                        alertDialog = AlertDialogState.NONE,
                         issues = updatedIssues,
                         fabState = getFabState(updatedIssues.isEmpty())
                     )
@@ -173,12 +173,14 @@ class MainViewModel @Inject constructor(
 
             MainEvent.EnablingBluetoothNoPermissionException -> _uiState.update { state ->
                 state.copy(
-                    alertDialog = AlertDialogData(
-                        title = stringProvider.getString(R.string.alert_title_enable_bluetooth_exception),
-                        message = stringProvider.getString(R.string.alert_message_enable_bluetooth_exception),
-                        btnText = stringProvider.getString(android.R.string.ok),
-                        btnOnClick = { _uiState.update { it.copy(alertDialog = null) } }
-                    ),
+                    alertDialog = AlertDialogState.ENABLE_BLUETOOTH_ERROR
+//                        AlertDialogData(
+//                        title = stringProvider.getString(R.string.alert_title_enable_bluetooth_exception),
+//                        message = stringProvider.getString(R.string.alert_message_enable_bluetooth_exception),
+//                        btnText = stringProvider.getString(android.R.string.ok),
+//                        btnOnClick = { _uiState.update { it.copy(alertDialog = null) } }
+//                    )
+                    ,
                     fabState = getFabState(state.issues.isEmpty())
                 )
             }
@@ -195,15 +197,17 @@ class MainViewModel @Inject constructor(
             is MainEvent.OnScanFailed -> {
                 _uiState.update { state ->
                     state.copy(
-                        alertDialog = AlertDialogData(
-                            title = stringProvider.getString(R.string.alert_title_scan_error),
-                            message = stringProvider.getString(
-                                R.string.alert_message_scan_error,
-                                event.errorCode
-                            ),
-                            btnText = stringProvider.getString(android.R.string.ok),
-                            btnOnClick = { _uiState.update { it.copy(alertDialog = null) } }
-                        ),
+                        alertDialog = AlertDialogState.SCAN_FAILED
+//                            AlertDialogData(
+//                            title = stringProvider.getString(R.string.alert_title_scan_error),
+//                            message = stringProvider.getString(
+//                                R.string.alert_message_scan_error,
+//                                event.errorCode
+//                            ),
+//                            btnText = stringProvider.getString(android.R.string.ok),
+//                            btnOnClick = { _uiState.update { it.copy(alertDialog = null) } }
+//                        )
+                        ,
                         fabState = getFabState(state.issues.isEmpty())
                     )
                 }

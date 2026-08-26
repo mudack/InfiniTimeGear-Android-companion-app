@@ -7,7 +7,7 @@ import kotlin.reflect.KClass
 
 data class MainState(
     val issues : Map<KClass<out IssueType>, IssueType> = emptyMap(),
-    val alertDialog: AlertDialogData? = null, //null means to do not show alertDialog
+    val alertDialog: AlertDialogState = AlertDialogState.NONE,
     val isBluetoothEnabled: Boolean = false,
     val isItFirstOnResume: Boolean = true,
     val scannedDevices: List<BluetoothDeviceUi> = emptyList(),
@@ -17,4 +17,8 @@ data class MainState(
 
 enum class MainScreenFabState{
     ISSUE, READY_FOR_SCANNING, IS_SCANNING
+}
+
+enum class AlertDialogState{
+    NONE, ISSUE_EXISTS, ENABLE_BLUETOOTH_ERROR, SCAN_FAILED
 }

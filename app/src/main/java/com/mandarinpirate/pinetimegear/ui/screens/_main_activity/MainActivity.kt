@@ -316,9 +316,11 @@ fun LazyIssueContainer(
     IssueContainer(
         modifier,
         issues,
-        onIssueBtnClick = { alertDialogData, issue ->
+        onIssueBtnClick = { issue ->
+            val alertData: AlertDialogData = bluetoothIssueToAlertDialogMapper(context, issue)
             sendEvent(
                 MainEvent.ShowUpAlertDialog(//todo btnOnClick set in another way, i don't like this way
+
                     alertDialogData.copy(btnOnClick = { onAlertBtnClick(issue.type) })
                 )
             )
@@ -330,7 +332,7 @@ fun LazyIssueContainer(
 fun IssueContainer(
     modifier: Modifier,
     issues: List<IssueMessageUI>,
-    onIssueBtnClick: (AlertDialogData, issue: IssueMessageUI) -> Unit,
+    onIssueBtnClick: (issue: IssueMessageUI) -> Unit,
 ) {
     val errorBorderColor: Color = MaterialTheme.colorScheme.errorContainer
     val shape = RoundedCornerShape(dimensionResource(R.dimen.issue_message_default_corner_size))
@@ -348,12 +350,10 @@ fun IssueContainer(
         ) {
             items(issues) { issueMessage ->
 
-                val alertData: AlertDialogData = bluetoothIssueToAlertDialogMapper(issueMessage)
-
                 IssueMessage(
                     issue = issueMessage,
                     onButtonClicked = {
-                        onIssueBtnClick(alertData, issueMessage)
+                        onIssueBtnClick( issueMessage)
                     },
                 )
             }
