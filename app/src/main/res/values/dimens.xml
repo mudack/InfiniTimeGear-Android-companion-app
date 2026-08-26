@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="issue_message_default_corner_size">6dp</dimen>
+    <dimen name="issue_message_padding_size">8dp</dimen>
+    <dimen name="issue_message_space_between_contents">8dp</dimen>
+    <dimen name="issue_message_default_border_width">2dp</dimen>
+    <dimen name="issue_message_default_inner_content_padding">6dp</dimen>
+    <dimen name="issue_alert_dialog_default_width">270dp</dimen>
+    <dimen name="issue_alert_dialog_default_content_padding">10dp</dimen>
+    <dimen name="fab_size">56dp</dimen>
+    <dimen name="fab_icon_size">24dp</dimen>
+    <dimen name="ble_devices_list_space_between_items">4.dp</dimen>
+    <dimen name="space_in_fab_container_between_chip_scroll_down_and_scan_butt">6dp</dimen>
+    <dimen name="space_in_fab_container_between_chip_scroll_down_and_scan_button">6dp</dimen>
+    <dimen name="scanned_device_list_item_horizontal_padding">6dp</dimen>
+</resources>

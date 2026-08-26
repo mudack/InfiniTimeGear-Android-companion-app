@@ -1,0 +1,60 @@
+<resources>
+    <string name="app_name">PineTime Gear Companion App</string>
+
+    <string name="issue_message_btn_fix">Fix</string>
+    <string name="issue_message_btn_show">Show</string>
+    <string name="issue_bluetooth_is_not_supported">Bluetooth isn\'t supported by device</string>
+    <string name="issue_ble_is_not_supported">BLE isn\'t supported by device</string>
+    <string name="issue_enable_bluetooth">Enable bluetooth</string>
+    <string name="issue_title_bluetooth_permission_is_not_granted">Permission for bluetooth is not granted</string>
+    <string name="issue_btn_text_provide_permission">Provide Permission</string>
+    <string name="issue_title_location_permission_is_not_granted">Location permission</string>
+
+    <string name="alert_title_bluetooth_is_not_supported">!Bluetooth!</string>
+    <string name="alert_message_bluetooth_is_not_supported">Your device doesn\'t support bluetooth, so you can\'t use this app\nIf there is a mistake please contact us /ContactData/</string>
+    <string name="alert_message_ble_is_not_supported">Your device doesn\'t support BLE, so you can\'t use this app\nIf there is a mistake please contact us /ContactData/</string><!--todo provide contact data-->
+    <string name="alert_title_ble_is_not_supported">!Bluetooth low energy!</string>
+    <string name="alert_title_require_to_enable_bluetooth">Enable Bluetooth</string>
+    <string name="alert_message_require_to_enable_bluetooth">This app require bluetooth to be enabled</string>
+    <string name="alert_btn_require_to_enable_bluetooth">Enable</string>
+    <string name="alert_message_bluetooth_permission_is_not_granted">This app require bluetooth permission to be granted</string>
+    <string name="alert_title_location_permission_is_not_granted">Permission for location is not granted</string>
+    <string name="alert_message_location_permission_is_not_granted">This app require location permission to be granted for android 11 and lower so the app is able for bluetooth scanning</string>
+
+    <string name="alert_title_bluetooth_permission_denied">Bluetooth permission denied</string>
+    <string name="alert_message_bluetooth_permission_denied">To provide permission press the button open setting and allow permission \"Nearby devices\"</string> <!--todo make new string for android lower then 30-->
+    <string name="alert_btn_bluetooth_permission_denied">Open Settings</string>
+    <string name="issue_title_bluetooth_permission_denied">Bluetooth permission denied</string>
+    <string name="issue_title_location_permission_denied">Location permission denied</string>
+
+    <string name="alert_title_location_permission_denied">Location permission denied</string>
+    <string name="alert_message_location_permission_denied">To provide permission press the button open setting and allow permission \"Location\"</string> <!--todo make new string for android lower then 30-->
+
+    <string name="alert_title_enable_bluetooth_exception">Enable bluetooth error</string>
+    <string name="alert_message_enable_bluetooth_exception">To enable bluetooth app Android OS require the app to have Bluetooth permission, please fix it first</string>
+    <string name="text_no_scanned_devices">No scanned devices</string>
+    <string name="content_description_scan_button_requires_to_fix_issues">Scan button requires to fix issues to be able to work</string>
+    <string name="content_description_scan_button_is_ready_to_start_scanning">Scan button is ready to start scanning</string>
+    <string name="alert_title_scan_error">Scan failed</string>
+    <string name="alert_message_scan_error">Scan error code: %s</string>
+    <string name="alert_title_issue_exists">There are issues</string>
+    <string name="alert_message_issue_exists">Please fix issues, to make this feature workable!!!</string>
+    <string name="fab_icon_pause_description">This is FAB button what pause bluetooth scanning</string>
+    <string name="scroll_down_chip_content_description_icon">This is button to set list scroll behavior, should it auto-scroll down as it gets new device or no</string>
+    <string name="chip_text_scroll_to_the_end">Scroll\nto the end</string>
+    <string name="issue_title_bluetooth_application_registration_failed">Application registration error</string>
+    <string name="issue_message_application_registration_failed">The Bluetooth stack rejected application registration (Application Registration Failed). This is usually due to an internal system issue. Restart your Bluetooth adapter.</string>
+    <string name="issue_title_bluetooth_internal_error">Bluetooth Error (Internal Error)</string>
+    <string name="issue_message_bluetooth_internal_error">An internal error has occurred in the Android system. If restarting Bluetooth doesn\'t help, try rebooting your device.</string>
+    <string name="issue_title_bluetooth_out_of_hardware_resources">Bluetooth is overloaded (OutOfHardwareResources)</string>
+    <string name="issue_message_bluetooth_out_of_hardware_resources">The system cannot allocate resources for a new scan. Close other applications using Bluetooth and try again.</string>
+    <string name="issue_title_bluetooth_scan_with_same_settings_is_already_started">Duplicate Scan Request (ScanWithSameSettingsIsAlreadyStarted)</string>
+    <string name="issue_message_bluetooth_scan_with_same_settings_is_already_started">A scan with the exact same settings is already active. Android prevents starting redundant scan instances to save system resources.</string>
+    <string name="issue_title_bluetooth_this_app_tries_scan_to_frequently">Scan Throttling Active (ThisAppTriesScanToFrequently)</string>
+    <string name="issue_message_bluetooth_this_app_tries_scan_to_frequently">Android has blocked this request because the app is attempting to start/stop scanning too frequently. Please wait at least 30 seconds before trying again.</string>
+    <string name="issue_title_bluetooth_power_optimized_scan_unsupported">Power Optimization Unsupported (PowerOptimizedScanUnsupported)</string>
+    <string name="issue_message_bluetooth_power_optimized_scan_unsupported">The device\'s Bluetooth controller does not support hardware-level power-optimized scanning. Try switching to a balanced or low-latency scan mode in settings.</string>
+    <string name="issue_title_bluetooth_undefined_error">Undefined bluetooth error with code %d</string>
+    <string name="issue_message_bluetooth_undefined_error">Undefined error occurs with code %d</string>
+
+</resources>
