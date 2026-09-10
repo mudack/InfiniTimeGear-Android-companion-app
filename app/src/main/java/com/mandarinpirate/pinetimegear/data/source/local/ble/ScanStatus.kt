@@ -6,28 +6,28 @@ sealed interface ScanStatus {
     data class DeviceFound(val device: BluetoothDevice) : ScanStatus
     data class PermissionNotProvided(val notProvidedPermission: String) : ScanStatus
 
-    sealed interface ScanFailed : ScanStatus {
+    sealed class ScanFailed(errorCode: Int) : ScanStatus {
 //        object NoError : ScanFailed //error number = 0
 
         /** Fails to start scan as BLE scan with the same settings is already started by the app. */
-        object ScanWithSameSettingsIsAlreadyStarted : ScanFailed //error number = 1
+        data object ScanWithSameSettingsIsAlreadyStarted : ScanFailed(1) //error number = 1
 
         /** Fails to start scan as app cannot be registered. */
-        object ApplicationRegistrationFailed : ScanFailed //error number = 2
+        data object ApplicationRegistrationFailed : ScanFailed(2) //error number = 2
 
         /** Fails to start scan due an internal error */
-        object InternalError : ScanFailed  //error number = 3
+        data object InternalError : ScanFailed(3)  //error number = 3
 
         /** Fails to start power optimized scan as this feature is not supported. */
-        object PowerOptimizedScanUnsupported : ScanFailed  //error number = 4
+        data object PowerOptimizedScanUnsupported : ScanFailed(4)  //error number = 4
 
         /** Fails to start scan as it is out of hardware resources. */
-        object OutOfHardwareResources : ScanFailed //error number = 5
+        data object OutOfHardwareResources : ScanFailed(5) //error number = 5
 
         /** Fails to start scan as application tries to scan too frequently. */
-        object ThisAppTriesScanToFrequently : ScanFailed  //error number = 6
+        data object ThisAppTriesScanToFrequently : ScanFailed(6)  //error number = 6
 
-        data class UndefinedErrorCode(val errorCode: Int) : ScanFailed
+        data class UndefinedErrorCode(val errorCode: Int) : ScanFailed(errorCode)
 
         companion object {
             fun parseByCode(errorCode: Int): ScanFailed = when (errorCode) {

@@ -20,17 +20,58 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.window.DialogProperties
 import com.mandarinpirate.pinetimegear.R
 import com.mandarinpirate.pinetimegear.ui.entities.AlertDialogData
+import com.mandarinpirate.pinetimegear.ui.screens._main_activity.AlertDialogState
 import com.mandarinpirate.pinetimegear.ui.theme.PineTimeGearCompanionAppTheme
+
+@Composable
+fun IssueAlertDialog(
+    modifier: Modifier = Modifier,
+    state: AlertDialogState,
+    onDismissRequest: () -> Unit
+) {
+    val alertDialogData: AlertDialogData = when (state) {
+        AlertDialogState.None -> return
+        AlertDialogState.IssueExists -> AlertDialogData(
+            title = stringResource(R.string.alert_title_issue_exists),
+            message = stringResource(R.string.alert_message_issue_exists),
+            btnText = stringResource(android.R.string.ok),
+            btnOnClick = onDismissRequest
+        )
+
+        AlertDialogState.EnableBluetoothError -> AlertDialogData(
+            title = stringResource(R.string.alert_title_enable_bluetooth_exception),
+            message = stringResource(R.string.alert_message_enable_bluetooth_exception),
+            btnText = stringResource(android.R.string.ok),
+            btnOnClick = onDismissRequest
+        )
+
+        is AlertDialogState.ScanFailed -> AlertDialogData(
+            title = stringResource(R.string.alert_title_scan_error),
+            message = stringResource(
+                R.string.alert_message_scan_error,
+                state.errorCode
+            ),
+            btnText = stringResource(android.R.string.ok),
+            btnOnClick = onDismissRequest
+        )
+    }
+    IssueAlertDialog(
+        modifier = modifier,
+        onDismissRequest = onDismissRequest,
+        alertDialogData = alertDialogData
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IssueAlertDialog(
     modifier: Modifier = Modifier,
-    data: AlertDialogData,
+    alertDialogData: AlertDialogData,
     onDismissRequest: () -> Unit
 ) {
     BasicAlertDialog(
@@ -44,14 +85,19 @@ fun IssueAlertDialog(
             modifier
                 .width(dimensionResource(R.dimen.issue_alert_dialog_default_width))
         ) {
-            Column(Modifier.fillMaxWidth().padding(dimensionResource(R.dimen.issue_alert_dialog_default_content_padding))) {
-                Text(text = data.title, style = MaterialTheme.typography.titleLarge)
-                Text(text = data.message, style = MaterialTheme.typography.bodyLarge)
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(dimensionResource(R.dimen.issue_alert_dialog_default_content_padding))
+            ) {
+                Text(text = alertDialogData.title, style = MaterialTheme.typography.titleLarge)
+                Text(text = alertDialogData.message, style = MaterialTheme.typography.bodyLarge)
                 Button(
                     modifier = Modifier.align(Alignment.End),
-                    onClick = data.btnOnClick ?: throw RuntimeException("lambda was not provided for alertDialog btn please fix it, you can find it by todo list in IDE")
-                ){
-                    Text(data.btnText)
+                    onClick = alertDialogData.btnOnClick
+                        ?: throw RuntimeException("lambda was not provided for alertDialog btn please fix it, you can find it by todo list in IDE")
+                ) {
+                    Text(alertDialogData.btnText)
                 }
             }
         }
@@ -70,7 +116,7 @@ fun IssueAlertDialogPreview() {
         }
         if (showDialog) {
             IssueAlertDialog(
-                data = AlertDialogData(
+                alertDialogData = AlertDialogData(
                     title = "Title",
                     message = "Message",
                     btnText = "Button Text",
