@@ -5,7 +5,7 @@ import com.mandarinpirate.pinetimegear.ui.entities.AlertDialogData
 
 sealed interface MainEvent {
     data object FirstOnResume : MainEvent
-    data object OnFabPressed : MainEvent
+    data class OnFabPressed(val issueExistsDialogData: AlertDialogData) : MainEvent
     data object ScrollDownChipClicked : MainEvent
     data object DismissAlertDialog : MainEvent
     data object OnAllPermissionAreGranted : MainEvent
@@ -15,7 +15,7 @@ sealed interface MainEvent {
     data class OnDeniedPermissions(val deniedPermission: List<String>): MainEvent //send when app tried to get prem access but it was denied by user
 
     data class OnNotGrantedPermissions(val notGrantedPermission: List<String>): MainEvent //send when app have spotted that perm is not granted
-    data class ShowUpAlertDialog(val alertDialogData: AlertDialogState) : MainEvent
+    data class ShowUpAlertDialog(val alertDialogData: AlertDialogData) : MainEvent
     data class TryToEnableBluetooth(val isSuccessful: Boolean): MainEvent
     data class InitBluetoothAvailability(
         val isBluetoothAvailable: Boolean,
@@ -23,5 +23,5 @@ sealed interface MainEvent {
     ): MainEvent
 
     data class OnScanResult(val scannedDevice: BluetoothDevice): MainEvent
-    data class OnScanFailed(val errorCode: Int): MainEvent
+    data class OnScanFailed(val errorCode: Int, val alertDialogData: AlertDialogData): MainEvent
 }

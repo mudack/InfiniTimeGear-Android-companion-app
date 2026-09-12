@@ -58,9 +58,8 @@ import com.mandarinpirate.pinetimegear.ui.base.IssueAlertDialog
 import com.mandarinpirate.pinetimegear.ui.base.IssueMessage
 import com.mandarinpirate.pinetimegear.ui.base.util.LifecycleTracker
 import com.mandarinpirate.pinetimegear.ui.base.util.WindowFocusTracker
-import com.mandarinpirate.pinetimegear.ui.base.util.mapIssueToAlertDialogState
-import com.mandarinpirate.pinetimegear.ui.base.util.mapIssueTypeToIssueMessageUI
 import com.mandarinpirate.pinetimegear.ui.bluetoothPermissionGrantedHandler
+import com.mandarinpirate.pinetimegear.ui.entities.AlertDialogData
 import com.mandarinpirate.pinetimegear.ui.entities.IssueMessageUI
 import com.mandarinpirate.pinetimegear.ui.entities.IssuePermissionStatus
 import com.mandarinpirate.pinetimegear.ui.entities.BluetoothIssueType
@@ -146,9 +145,15 @@ class MainActivity : ComponentActivity() {
                             )
 
                             Spacer(Modifier.height(dimensionResource(R.dimen.space_in_fab_container_between_chip_scroll_down_and_scan_button)))
+                            val issueExistDialogData = AlertDialogData(
+                                title = stringResource(R.string.alert_title_issue_exists),
+                                message = stringResource(R.string.alert_message_issue_exists),
+                                btnText = stringResource(android.R.string.ok),
+                                btnOnClick = { viewModel.sendEvent(MainEvent.DismissAlertDialog) }
+                            )
                             FilledIconButton(
                                 modifier = Modifier.size(fabDimension),
-                                onClick = { viewModel.sendEvent(MainEvent.OnFabPressed) }
+                                onClick = { viewModel.sendEvent(MainEvent.OnFabPressed(issueExistDialogData)) }
                             ) {
                                 when (uiState.fabState) {
                                     MainScreenFabState.ISSUE -> Icon(
@@ -240,8 +245,8 @@ fun MainScreenContent(
             }
         }
 
-        if (uiState.alertDialogState != AlertDialogState.None) {
-            IssueAlertDialog(state = uiState.alertDialogState) {
+        if (uiState.alertDialogData != null) {
+            IssueAlertDialog(alertDialogData = uiState.alertDialogData) {
                 sendEvent(MainEvent.DismissAlertDialog)
             }
         }
@@ -270,9 +275,9 @@ fun LazyIssueContainer(
             notAllGranted = { sendEvent(MainEvent.OnDeniedPermissions(it)) },
         )
     }
+
     val onAlertBtnClick =
-        { issueType: BluetoothIssueType ->  //todo this code is hard to read and required to be simplified
-            //todo btnOnClick set in another way, i don't like this way
+        { issueType: BluetoothIssueType ->
             when (issueType) {
                 BluetoothIssueType.BluetoothIsNotEnabled -> {
                     val requiredPermissionsToEnableBluetooth =
@@ -315,9 +320,11 @@ fun LazyIssueContainer(
         modifier,
         issues,
         onIssueBtnClick = { issue ->
-            val alertDialogState = mapIssueToAlertDialogState(issue.type)
+            val alertDialogData = mapIssueToAlertDialogData(context, issue.type).copy(btnOnClick = {
+                onAlertBtnClick(issue.type)
+            })
             sendEvent(
-                MainEvent.ShowUpAlertDialog(alertDialogState)
+                MainEvent.ShowUpAlertDialog(alertDialogData)
             )
         }
     )
@@ -359,7 +366,7 @@ fun IssueContainer(
 @Preview(showBackground = true)
 @Composable
 fun MainScreenContentPreview() {
-    PineTimeGearCompanionAppTheme() {
+    PineTimeGearCompanionAppTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             MainScreenContent(Modifier.padding(innerPadding))
         }

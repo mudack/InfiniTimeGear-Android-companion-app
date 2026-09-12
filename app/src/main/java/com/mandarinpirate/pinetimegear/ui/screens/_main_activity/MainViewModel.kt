@@ -64,7 +64,7 @@ class MainViewModel @Inject constructor(
                 when (uiState.value.fabState) {
                     MainScreenFabState.ISSUE -> _uiState.update {
                         it.copy(
-                            alertDialogState = AlertDialogState.IssueExists
+                            alertDialogData = event.issueExistsDialogData
                         )
                     }
 
@@ -128,8 +128,8 @@ class MainViewModel @Inject constructor(
                 }
             }
 
-            is MainEvent.DismissAlertDialog -> _uiState.update { it.copy(alertDialogState = AlertDialogState.None) }
-            is MainEvent.ShowUpAlertDialog -> _uiState.update { it.copy(alertDialogState = event.alertDialogData) }
+            is MainEvent.DismissAlertDialog -> _uiState.update { it.copy(alertDialogData = null) }
+            is MainEvent.ShowUpAlertDialog -> _uiState.update { it.copy(alertDialogData = event.alertDialogData) }
 
             MainEvent.OnAllPermissionAreGranted -> {
                 val updatedIssues = _uiState.value.issues
@@ -137,7 +137,7 @@ class MainViewModel @Inject constructor(
                     .toMutableMap()
                 _uiState.update {
                     it.copy(
-                        alertDialogState = AlertDialogState.None,
+                        alertDialogData = null,
                         issues = updatedIssues,
                         fabState = getFabState(updatedIssues.isEmpty())
                     )
@@ -156,7 +156,6 @@ class MainViewModel @Inject constructor(
 
             MainEvent.EnablingBluetoothNoPermissionException -> _uiState.update { state ->
                 state.copy(
-                    alertDialogState = AlertDialogState.EnableBluetoothError,
                     fabState = getFabState(state.issues.isEmpty())
                 )
             }
@@ -173,7 +172,7 @@ class MainViewModel @Inject constructor(
             is MainEvent.OnScanFailed -> {
                 _uiState.update { state ->
                     state.copy(
-                        alertDialogState = AlertDialogState.ScanFailed(event.errorCode),
+                        alertDialogData = event.alertDialogData,
                         fabState = getFabState(state.issues.isEmpty())
                     )
                 }
@@ -197,9 +196,7 @@ class MainViewModel @Inject constructor(
     private fun startBleScanCollect() {
         if (bleScannerJob != null) return
 
-        bleScannerJob = bleScannerRepo.observeBleScan(
-            emptyList()
-        )
+        bleScannerJob = bleScannerRepo.observeBleScan(emptyList())
             .onEach { value ->
                 when (value) {
                     is ScanStatus.DeviceFound -> sendEvent(MainEvent.OnScanResult(value.device))

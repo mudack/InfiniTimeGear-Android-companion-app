@@ -1,4 +1,4 @@
-package com.mandarinpirate.pinetimegear.ui.base.util
+package com.mandarinpirate.pinetimegear.ui.screens._main_activity
 
 import android.content.Context
 import androidx.compose.runtime.Composable
@@ -8,9 +8,8 @@ import com.mandarinpirate.pinetimegear.ui.entities.AlertDialogData
 import com.mandarinpirate.pinetimegear.ui.entities.IssueMessageUI
 import com.mandarinpirate.pinetimegear.ui.entities.IssuePermissionStatus
 import com.mandarinpirate.pinetimegear.ui.entities.BluetoothIssueType
-import com.mandarinpirate.pinetimegear.ui.screens._main_activity.AlertDialogState
 
-fun mapIssueToAlertDialog(
+fun mapIssueToAlertDialogData(
     context: Context,
     issueType: BluetoothIssueType
 ): AlertDialogData = when (issueType) {
@@ -141,9 +140,3 @@ fun mapIssueTypeToIssueMessageUI( //map bluetooth issue into label
         },
     type = issueType
 )
-
-fun mapIssueToAlertDialogState(issueType: BluetoothIssueType): AlertDialogState = when (issueType) {
-    is BluetoothIssueType.BluetoothScanIssue -> AlertDialogState.ScanFailed(issueType.errorCode)
-    is BluetoothIssueType.Permissions -> AlertDialogState.EnableBluetoothError
-    else -> AlertDialogState.IssueExists
-}
