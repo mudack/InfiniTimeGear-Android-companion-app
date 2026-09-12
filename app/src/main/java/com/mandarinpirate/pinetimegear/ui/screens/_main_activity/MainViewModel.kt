@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mandarinpirate.pinetimegear.data.source.local.ble.ScanStatus
+import com.mandarinpirate.pinetimegear.domain.models.BleScanFilter
 import com.mandarinpirate.pinetimegear.domain.repos.BleScannerRepo
 import com.mandarinpirate.pinetimegear.ui.entities.BluetoothDeviceUi
 import com.mandarinpirate.pinetimegear.ui.entities.IssuePermissionStatus
@@ -196,7 +197,7 @@ class MainViewModel @Inject constructor(
     private fun startBleScanCollect() {
         if (bleScannerJob != null) return
 
-        bleScannerJob = bleScannerRepo.observeBleScan(emptyList())
+        bleScannerJob = bleScannerRepo.observeBleScan(listOf(BleScanFilter(stringOfServiceUuid = "00001530-1212-efde-1523-785feabcd123")))
             .onEach { value ->
                 when (value) {
                     is ScanStatus.DeviceFound -> sendEvent(MainEvent.OnScanResult(value.device))

@@ -8,7 +8,7 @@ internal fun BleScanFilter.toAndroidScanFilter(): ScanFilter {
     return ScanFilter.Builder().apply {
         deviceName?.let { setDeviceName(it) }
         deviceAddress?.let { setDeviceAddress(it) }
-        serviceUuid?.let {
+        stringOfServiceUuid?.let {
             setServiceUuid(ParcelUuid.fromString(it))
         }
     }.build()
