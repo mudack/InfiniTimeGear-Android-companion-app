@@ -99,14 +99,14 @@ class ScanViewModel @Inject constructor(
 
             ScanEvent.RequireToCheckIsBluetoothEnabled -> {
                 val newIssues = _uiState.value.issues.toMutableSet()
-                if (!bluetoothManager.adapter.isEnabled)
+                if (!bluetoothManager.adapter.isEnabled) {
                     newIssues.add(BluetoothIssueType.BluetoothIsNotEnabled)
-                else newIssues.add(BluetoothIssueType.BluetoothIsNotEnabled)
-                _uiState.update {
-                    it.copy(
-                        issues = newIssues,
-                        fabState = getFabState(newIssues.isEmpty())
-                    )
+                    _uiState.update {
+                        it.copy(
+                            issues = newIssues,
+                            fabState = getFabState(newIssues.isEmpty())
+                        )
+                    }
                 }
             }
 
