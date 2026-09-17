@@ -1,4 +1,4 @@
-package com.mandarinpirate.pinetimegear.ui.screens._main_activity
+package com.mandarinpirate.pinetimegear.ui.screens.scan
 
 import android.bluetooth.BluetoothManager
 import androidx.lifecycle.ViewModel
@@ -26,15 +26,15 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-class MainViewModel @Inject constructor(
+class ScanViewModel @Inject constructor(
     private val bluetoothManager: BluetoothManager,
     private val bleScannerRepo: BleScannerRepo
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(MainState())
+    private val _uiState = MutableStateFlow(ScanState())
 
-    val uiState: StateFlow<MainState> = _uiState.stateIn(
+    val uiState: StateFlow<ScanState> = _uiState.stateIn(
         viewModelScope, WhileSubscribed(5_000),
-        MainState()
+        ScanState()
     )
 
     init {
@@ -48,41 +48,41 @@ class MainViewModel @Inject constructor(
 
     private var bleScannerJob: Job? = null
 
-    fun sendEvent(event: MainEvent) {
+    fun sendEvent(event: ScanEvent) {
         when (event) {
-            is MainEvent.FirstOnResume -> _uiState.update { it.copy(isItFirstOnResume = false) }
-            is MainEvent.ScrollDownChipClicked -> _uiState.update {
+            is ScanEvent.FirstOnResume -> _uiState.update { it.copy(isItFirstOnResume = false) }
+            is ScanEvent.ScrollDownChipClicked -> _uiState.update {
                 it.copy(
                     scrollToTheEnd = !it.scrollToTheEnd
                 )
             }
 
-            is MainEvent.OnFabPressed -> {
+            is ScanEvent.OnFabPressed -> {
                 when (uiState.value.fabState) {
-                    MainScreenFabState.ISSUE -> _uiState.update {
+                    ScanScreenFabState.ISSUE -> _uiState.update {
                         it.copy(
                             alertDialogData = event.issueExistsDialogData
                         )
                     }
 
-                    MainScreenFabState.READY_FOR_SCANNING -> {
+                    ScanScreenFabState.READY_FOR_SCANNING -> {
                         startBleScanCollect()
                         _uiState.update {
                             it.copy(
-                                fabState = MainScreenFabState.IS_SCANNING,
+                                fabState = ScanScreenFabState.IS_SCANNING,
                                 scannedDevices = emptyList()
                             )
                         }
                     }
 
-                    MainScreenFabState.IS_SCANNING -> {
+                    ScanScreenFabState.IS_SCANNING -> {
                         stopBleScanCollect()
-                        _uiState.update { it.copy(fabState = MainScreenFabState.READY_FOR_SCANNING) }
+                        _uiState.update { it.copy(fabState = ScanScreenFabState.READY_FOR_SCANNING) }
                     }
                 }
             }
 
-            is MainEvent.InitBluetoothAvailability -> {
+            is ScanEvent.InitBluetoothAvailability -> {
                 val newIssues = uiState.value.issues.toMutableSet()
                 if (!event.isBluetoothAvailable) newIssues.add(BluetoothIssueType.HardwareIssue.BluetoothIsNotAvailable)
                 if (!event.isBluetoothLEAvailable) newIssues.add(BluetoothIssueType.HardwareIssue.BLEIsNotAvailable)
@@ -97,7 +97,7 @@ class MainViewModel @Inject constructor(
                 }
             }
 
-            MainEvent.RequireToCheckIsBluetoothEnabled -> {
+            ScanEvent.RequireToCheckIsBluetoothEnabled -> {
                 val newIssues = _uiState.value.issues.toMutableSet()
                 if (!bluetoothManager.adapter.isEnabled)
                     newIssues.add(BluetoothIssueType.BluetoothIsNotEnabled)
@@ -110,7 +110,7 @@ class MainViewModel @Inject constructor(
                 }
             }
 
-            is MainEvent.TryToEnableBluetooth -> {
+            is ScanEvent.TryToEnableBluetooth -> {
                 val newIssues = _uiState.value.issues.toMutableSet()
                 if (event.isSuccessful)
                     newIssues.add(BluetoothIssueType.BluetoothIsNotEnabled)
@@ -125,10 +125,10 @@ class MainViewModel @Inject constructor(
                 }
             }
 
-            is MainEvent.DismissAlertDialog -> _uiState.update { it.copy(alertDialogData = null) }
-            is MainEvent.ShowUpAlertDialog -> _uiState.update { it.copy(alertDialogData = event.alertDialogData) }
+            is ScanEvent.DismissAlertDialog -> _uiState.update { it.copy(alertDialogData = null) }
+            is ScanEvent.ShowUpAlertDialog -> _uiState.update { it.copy(alertDialogData = event.alertDialogData) }
 
-            MainEvent.OnAllPermissionAreGranted -> {
+            ScanEvent.OnAllPermissionAreGranted -> {
                 val updatedIssues = _uiState.value.issues
                     .filter { it !is BluetoothIssueType.Permissions }
                     .toMutableSet()
@@ -141,23 +141,23 @@ class MainViewModel @Inject constructor(
                 }
             }
 
-            is MainEvent.OnNotGrantedPermissions -> addIssuesByPermissionsAndStatus(
+            is ScanEvent.OnNotGrantedPermissions -> addIssuesByPermissionsAndStatus(
                 event.notGrantedPermission,
                 permissionStatus = IssuePermissionStatus.NOT_GRANTED
             )
 
-            is MainEvent.OnDeniedPermissions -> addIssuesByPermissionsAndStatus(
+            is ScanEvent.OnDeniedPermissions -> addIssuesByPermissionsAndStatus(
                 event.deniedPermission,
                 permissionStatus = IssuePermissionStatus.DENIED,
             )
 
-            MainEvent.EnablingBluetoothNoPermissionException -> _uiState.update { state ->
+            ScanEvent.EnablingBluetoothNoPermissionException -> _uiState.update { state ->
                 state.copy(
                     fabState = getFabState(state.issues.isEmpty())
                 )
             }
 
-            is MainEvent.OnScanResult -> {
+            is ScanEvent.OnScanResult -> {
                 val device = BluetoothDeviceUi.from(event.scannedDevice)
                 if (_uiState.value.scannedDevices.find { (_, address) -> address == device.address } == null) {
                     _uiState.update {
@@ -166,7 +166,7 @@ class MainViewModel @Inject constructor(
                 }
             }
 
-            is MainEvent.OnScanFailed -> {
+            is ScanEvent.OnScanFailed -> {
                 _uiState.update { state ->
                     state.copy(
                         alertDialogData = event.alertDialogData,
@@ -179,14 +179,14 @@ class MainViewModel @Inject constructor(
 
     private fun getFabState(
         isIssueListEmpty: Boolean,
-    ): MainScreenFabState {
+    ): ScanScreenFabState {
         val isBleScanning = bleScannerJob != null
         return when {
             !isIssueListEmpty -> {
-                MainScreenFabState.ISSUE
+                ScanScreenFabState.ISSUE
             }
-            isBleScanning -> MainScreenFabState.IS_SCANNING
-            else -> MainScreenFabState.READY_FOR_SCANNING
+            isBleScanning -> ScanScreenFabState.IS_SCANNING
+            else -> ScanScreenFabState.READY_FOR_SCANNING
         }
     }
 
@@ -196,7 +196,7 @@ class MainViewModel @Inject constructor(
         bleScannerJob = bleScannerRepo.observeBleScan(listOf(BleScanFilter(stringOfServiceUuid = PINETIME_UUID_SERVICE)))
             .onEach { value ->
                 when (value) {
-                    is ScanStatus.DeviceFound -> sendEvent(MainEvent.OnScanResult(value.device))
+                    is ScanStatus.DeviceFound -> sendEvent(ScanEvent.OnScanResult(value.device))
 
                     is ScanStatus.PermissionNotProvided -> addIssuesByPermissionsAndStatus(
                         listOf(value.notProvidedPermission),

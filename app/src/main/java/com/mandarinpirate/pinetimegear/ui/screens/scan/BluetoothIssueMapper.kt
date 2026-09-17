@@ -1,4 +1,4 @@
-package com.mandarinpirate.pinetimegear.ui.screens._main_activity
+package com.mandarinpirate.pinetimegear.ui.screens.scan
 
 import android.content.Context
 import androidx.compose.runtime.Composable

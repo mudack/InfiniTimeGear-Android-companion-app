@@ -2,15 +2,19 @@ package com.mandarinpirate.pinetimegear
 
 import android.bluetooth.BluetoothManager
 import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.mandarinpirate.data.ble.BleScannerRepoImpl
 import com.mandarinpirate.data.local.ble.SafeBleScannerImpl
 import com.mandarinpirate.data.local.data_store.preferences_store.PreferencesStoreRepoImpl
+import com.mandarinpirate.data.local.data_store.saved_device.SavedDeviceRepoImpl
 import com.mandarinpirate.data.local.string_provider.StringProvider
 import com.mandarinpirate.data.local.string_provider.StringProviderImpl
 import com.mandarinpirate.domain.repos.BleScannerRepo
 import com.mandarinpirate.domain.repos.PreferencesStoreRepo
+import com.mandarinpirate.domain.repos.SavedDeviceRepo
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -39,15 +43,24 @@ object AppHiltModule {
 
     @Provides
     @Singleton
-    fun providePreferencesStoreRepo(
+    fun providePreferencesDataStore(
         @ApplicationContext context: Context
-    ): PreferencesStoreRepo {
-        val dataStore = PreferenceDataStoreFactory.create(
+    ): DataStore<Preferences> = PreferenceDataStoreFactory.create(
             corruptionHandler = null,
             scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
         ) { context.preferencesDataStoreFile(Const.PREFERENCES_DATA_STORE_FILE_NAME) }
-        return PreferencesStoreRepoImpl(dataStore)
-    }
+
+    @Provides
+    @Singleton
+    fun providePreferencesStoreRepo(
+        dataStore: DataStore<Preferences>
+    ): PreferencesStoreRepo = PreferencesStoreRepoImpl(dataStore)
+
+    @Provides
+    @Singleton
+    fun provideSavedDeviceRepo(
+        dataStore: DataStore<Preferences>
+    ): SavedDeviceRepo = SavedDeviceRepoImpl(dataStore)
 
     @Provides
     @Singleton

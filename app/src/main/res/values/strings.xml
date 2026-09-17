@@ -1,5 +1,13 @@
 <resources>
     <string name="app_name">PineTime Gear Companion App</string>
+    <string name="navigation_no_saved_device_message">No saved device. Please select a device.</string>
+    <string name="onboarding_title">Onboarding</string>
+    <string name="onboarding_continue_button">Continue</string>
+    <string name="main_menu_title">Main menu</string>
+    <string name="main_menu_working_hours_button">Working hours</string>
+    <string name="main_menu_select_another_device_button">Select another device</string>
+    <string name="working_hours_title">Working hours</string>
+    <string name="navigation_back_button">Back</string>
 
     <string name="issue_message_btn_fix">Fix</string>
     <string name="issue_message_btn_show">Show</string>

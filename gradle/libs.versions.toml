@@ -9,7 +9,7 @@ activityCompose = "1.13.0"
 kotlin = "2.4.10"
 composeBom = "2026.08.00"
 uiUnit = "1.12.0"
-navigationCompose = "2.10.0"
+navigationCompose = "2.10.1"
 hiltNavigationCompose = "1.4.0"
 hiltVersion = "2.60.1"
 kspVersion = "2.3.11"
@@ -61,6 +61,7 @@ kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-c
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 
 
 kotlin-hilt = { id = "com.google.dagger.hilt.android", version.ref = "hiltVersion" }
