@@ -3,15 +3,14 @@ package com.mandarinpirate.pinetimegear.ui.screens._main_activity
 import android.bluetooth.BluetoothManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mandarinpirate.pinetimegear.data.source.local.ble.ScanStatus
-import com.mandarinpirate.pinetimegear.domain.models.BleScanFilter
-import com.mandarinpirate.pinetimegear.domain.repos.BleScannerRepo
+import com.mandarinpirate.domain.ScanStatus
+import com.mandarinpirate.domain.models.BleScanFilter
+import com.mandarinpirate.domain.repos.BleScannerRepo
+import com.mandarinpirate.pinetimegear.Const.PINETIME_UUID_SERVICE
 import com.mandarinpirate.pinetimegear.ui.entities.BluetoothDeviceUi
 import com.mandarinpirate.pinetimegear.ui.entities.IssuePermissionStatus
 import com.mandarinpirate.pinetimegear.ui.entities.BluetoothIssueType
 import com.mandarinpirate.pinetimegear.ui.getIssueTypeByPermission
-import com.mandarinpirate.pinetimegear.ui.putUsingClassAsAKey
-import com.mandarinpirate.pinetimegear.ui.removeUsingClassAsAKey
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.Job
@@ -25,7 +24,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.reflect.KClass
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
@@ -44,9 +42,7 @@ class MainViewModel @Inject constructor(
             uiState
                 .map { state -> state.issues.isNotEmpty() }
                 .distinctUntilChanged()
-                .collect { shouldStop ->
-                    if (shouldStop) stopBleScanning()
-                }
+                .collect { isIssueListNotEmpty -> if (isIssueListNotEmpty) stopBleScanning() }
         }
     }
 
@@ -87,9 +83,9 @@ class MainViewModel @Inject constructor(
             }
 
             is MainEvent.InitBluetoothAvailability -> {
-                val newIssues = uiState.value.issues.toMutableMap()
-                if (!event.isBluetoothAvailable) newIssues.putUsingClassAsAKey(BluetoothIssueType.HardwareIssue.BluetoothIsNotAvailable)
-                if (!event.isBluetoothLEAvailable) newIssues.putUsingClassAsAKey(BluetoothIssueType.HardwareIssue.BLEIsNotAvailable)
+                val newIssues = uiState.value.issues.toMutableSet()
+                if (!event.isBluetoothAvailable) newIssues.add(BluetoothIssueType.HardwareIssue.BluetoothIsNotAvailable)
+                if (!event.isBluetoothLEAvailable) newIssues.add(BluetoothIssueType.HardwareIssue.BLEIsNotAvailable)
 
                 _uiState.update {
                     it.copy(
@@ -102,10 +98,10 @@ class MainViewModel @Inject constructor(
             }
 
             MainEvent.RequireToCheckIsBluetoothEnabled -> {
-                val newIssues = _uiState.value.issues.toMutableMap()
+                val newIssues = _uiState.value.issues.toMutableSet()
                 if (!bluetoothManager.adapter.isEnabled)
-                    newIssues.putUsingClassAsAKey(BluetoothIssueType.BluetoothIsNotEnabled)
-                else newIssues.removeUsingClassAsAKey(BluetoothIssueType.BluetoothIsNotEnabled)
+                    newIssues.add(BluetoothIssueType.BluetoothIsNotEnabled)
+                else newIssues.add(BluetoothIssueType.BluetoothIsNotEnabled)
                 _uiState.update {
                     it.copy(
                         issues = newIssues,
@@ -115,10 +111,10 @@ class MainViewModel @Inject constructor(
             }
 
             is MainEvent.TryToEnableBluetooth -> {
-                val newIssues = _uiState.value.issues.toMutableMap()
+                val newIssues = _uiState.value.issues.toMutableSet()
                 if (event.isSuccessful)
-                    newIssues.removeUsingClassAsAKey(BluetoothIssueType.BluetoothIsNotEnabled)
-                else newIssues.putUsingClassAsAKey(BluetoothIssueType.BluetoothIsNotEnabled)
+                    newIssues.add(BluetoothIssueType.BluetoothIsNotEnabled)
+                else newIssues.add(BluetoothIssueType.BluetoothIsNotEnabled)
 
                 _uiState.update {
                     it.copy(
@@ -134,8 +130,8 @@ class MainViewModel @Inject constructor(
 
             MainEvent.OnAllPermissionAreGranted -> {
                 val updatedIssues = _uiState.value.issues
-                    .filter { it.value !is BluetoothIssueType.Permissions }
-                    .toMutableMap()
+                    .filter { it !is BluetoothIssueType.Permissions }
+                    .toMutableSet()
                 _uiState.update {
                     it.copy(
                         alertDialogData = null,
@@ -197,7 +193,7 @@ class MainViewModel @Inject constructor(
     private fun startBleScanCollect() {
         if (bleScannerJob != null) return
 
-        bleScannerJob = bleScannerRepo.observeBleScan(listOf(BleScanFilter(stringOfServiceUuid = "00001530-1212-efde-1523-785feabcd123")))
+        bleScannerJob = bleScannerRepo.observeBleScan(listOf(BleScanFilter(stringOfServiceUuid = PINETIME_UUID_SERVICE)))
             .onEach { value ->
                 when (value) {
                     is ScanStatus.DeviceFound -> sendEvent(MainEvent.OnScanResult(value.device))
@@ -227,7 +223,7 @@ class MainViewModel @Inject constructor(
     }
     private fun stopBleScanning(){
         stopBleScanCollect()
-        getFabState(uiState.value.issues.isEmpty())
+        _uiState.update { it.copy(fabState = getFabState(uiState.value.issues.isEmpty())) }
     }
 
     private fun addIssuesByPermissionsAndStatus(
@@ -235,21 +231,22 @@ class MainViewModel @Inject constructor(
         permissionStatus: IssuePermissionStatus
     ) {
         val newIssueMessages = getIssueTypeByPermission(notGrantedPermissions, permissionStatus)
-        val issue: Map<KClass<out BluetoothIssueType>, BluetoothIssueType> =
-            _uiState.value.issues.plus(newIssueMessages)
+        val issue: Set<BluetoothIssueType> = _uiState.value.issues.plus(newIssueMessages)
         _uiState.update { it.copy(issues = issue, fabState = getFabState(issue.isEmpty())) }
     }
 
     private fun addIssue(issueType: BluetoothIssueType) {
-        val result = emptyMap<KClass<out BluetoothIssueType>, BluetoothIssueType>().toMutableMap()
-        result.putUsingClassAsAKey(issueType)
-        val issue: Map<KClass<out BluetoothIssueType>, BluetoothIssueType> =
-            _uiState.value.issues.plus(result)
+        val issue: Set<BluetoothIssueType> =
+            _uiState.value.issues.plus(issueType)
         _uiState.update {
             it.copy(
                 issues = issue,
                 fabState = getFabState(issue.isEmpty())
             )
         }
+    }
+
+    override fun onCleared() {
+        stopBleScanCollect()
     }
 }

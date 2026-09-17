@@ -6,4 +6,5 @@ object Const {
     const val ISSUE_ICON_PAINTER_RES: Int = android.R.drawable.stat_sys_warning
     const val BLUETOOTH_ICON_PAINTER_RES: Int = android.R.drawable.stat_sys_data_bluetooth
     const val URI_SCHEME_PACKAGE: String = "package"
+    const val PINETIME_UUID_SERVICE: String = "00001530-1212-efde-1523-785feabcd123"
 }

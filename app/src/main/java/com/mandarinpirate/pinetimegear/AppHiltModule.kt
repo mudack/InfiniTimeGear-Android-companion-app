@@ -4,13 +4,13 @@ import android.bluetooth.BluetoothManager
 import android.content.Context
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.preferencesDataStoreFile
-import com.mandarinpirate.pinetimegear.data.repo.ble.BleScannerRepoImpl
-import com.mandarinpirate.pinetimegear.data.source.local.ble.SafeBleScannerImpl
-import com.mandarinpirate.pinetimegear.data.source.local.data_store.preferences_store.PreferencesStoreRepoImpl
-import com.mandarinpirate.pinetimegear.data.source.local.string_provider.StringProvider
-import com.mandarinpirate.pinetimegear.data.source.local.string_provider.StringProviderImpl
-import com.mandarinpirate.pinetimegear.domain.repos.BleScannerRepo
-import com.mandarinpirate.pinetimegear.domain.repos.PreferencesStoreRepo
+import com.mandarinpirate.data.ble.BleScannerRepoImpl
+import com.mandarinpirate.data.local.ble.SafeBleScannerImpl
+import com.mandarinpirate.data.local.data_store.preferences_store.PreferencesStoreRepoImpl
+import com.mandarinpirate.data.local.string_provider.StringProvider
+import com.mandarinpirate.data.local.string_provider.StringProviderImpl
+import com.mandarinpirate.domain.repos.BleScannerRepo
+import com.mandarinpirate.domain.repos.PreferencesStoreRepo
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -54,8 +54,10 @@ object AppHiltModule {
     fun provideBleScannerRepo(
         @ApplicationContext context: Context,
         bluetoothManager:BluetoothManager
-    ): BleScannerRepo = BleScannerRepoImpl(SafeBleScannerImpl(
-        bluetoothManager = bluetoothManager,
-        context = context
-    ))
+    ): BleScannerRepo = BleScannerRepoImpl(
+        SafeBleScannerImpl(
+            bluetoothManager = bluetoothManager,
+            context = context
+        )
+    )
 }

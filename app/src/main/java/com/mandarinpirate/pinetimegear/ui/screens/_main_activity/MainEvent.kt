@@ -1,6 +1,6 @@
 package com.mandarinpirate.pinetimegear.ui.screens._main_activity
 
-import com.mandarinpirate.pinetimegear.domain.models.BluetoothDevice
+import com.mandarinpirate.domain.models.BluetoothDevice
 import com.mandarinpirate.pinetimegear.ui.entities.AlertDialogData
 
 sealed interface MainEvent {

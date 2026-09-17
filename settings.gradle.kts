@@ -24,3 +24,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "PineTime Gear Companion App"
 include(":app")
+include(":domain")
+include(":data")

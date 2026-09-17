@@ -5,6 +5,8 @@ plugins {
 
     alias(libs.plugins.kotlin.ksp) apply false
     alias(libs.plugins.kotlin.hilt) apply false
+    alias(libs.plugins.jetbrains.kotlin.jvm) apply false
+    alias(libs.plugins.android.library) apply false
 }
 
 buildscript {

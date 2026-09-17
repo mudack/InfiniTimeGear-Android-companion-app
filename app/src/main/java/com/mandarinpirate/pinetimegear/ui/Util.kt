@@ -7,7 +7,6 @@ import android.os.Build
 import androidx.core.content.ContextCompat
 import com.mandarinpirate.pinetimegear.ui.entities.IssuePermissionStatus
 import com.mandarinpirate.pinetimegear.ui.entities.BluetoothIssueType
-import kotlin.reflect.KClass
 
 fun getBluetoothPermission(): Array<String> = if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
     arrayOf(
@@ -30,12 +29,6 @@ fun Context.checkSelfAllPermissions(permissions: List<String>): Boolean {
     return true
 }
 
-fun getPermissionRequiredForBleScan() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-    Manifest.permission.BLUETOOTH_SCAN
-} else {
-    Manifest.permission.ACCESS_FINE_LOCATION
-}
-
 
 fun bluetoothPermissionGrantedHandler(
     permissionMap: Map<String, @JvmSuppressWildcards Boolean>,
@@ -51,11 +44,11 @@ fun bluetoothPermissionGrantedHandler(
 
 fun getIssueTypeByPermission(
     notGrantedPermission: List<String>, permissionStatus: IssuePermissionStatus
-): Map<KClass<out BluetoothIssueType>, BluetoothIssueType> {
-    val result = emptyMap<KClass<out BluetoothIssueType>, BluetoothIssueType>().toMutableMap()
+): Set<BluetoothIssueType> {
+    val result = emptySet<BluetoothIssueType>().toMutableSet()
 
     notGrantedPermission.forEach {
-        result.putUsingClassAsAKey(
+        result.add(
             when (it) {
                 Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN -> BluetoothIssueType.Permissions.Bluetooth(
                     permissionStatus
@@ -80,28 +73,4 @@ fun Context.getNotGrantedPermissions(permissionList: List<String>): List<String>
         }
     }
     return notGrantedPermissions
-}
-
-/**
- * The extension func below need for cases when we want to put or remove issue
- * using their ::class as the key
- * */
-fun MutableMap<KClass<out BluetoothIssueType>, BluetoothIssueType>.putUsingClassAsAKey(value: BluetoothIssueType) {
-    this[value::class] = value
-}
-
-fun MutableMap<KClass<out BluetoothIssueType>, BluetoothIssueType>.putUsingClassAsAKey(valueList: List<BluetoothIssueType>) {
-    valueList.forEach { value ->
-        this[value::class] = value
-    }
-}
-
-fun MutableMap<KClass<out BluetoothIssueType>, BluetoothIssueType>.putUsingClassAsAKey(vararg values: BluetoothIssueType) {
-    values.forEach { value ->
-        this[value::class] = value
-    }
-}
-
-fun MutableMap<KClass<out BluetoothIssueType>, BluetoothIssueType>.removeUsingClassAsAKey(value: BluetoothIssueType) {
-    this.remove(value::class)
 }

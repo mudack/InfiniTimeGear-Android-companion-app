@@ -65,10 +65,8 @@ import com.mandarinpirate.pinetimegear.ui.entities.IssuePermissionStatus
 import com.mandarinpirate.pinetimegear.ui.entities.BluetoothIssueType
 import com.mandarinpirate.pinetimegear.ui.getBluetoothPermission
 import com.mandarinpirate.pinetimegear.ui.getNotGrantedPermissions
-import com.mandarinpirate.pinetimegear.ui.putUsingClassAsAKey
 import com.mandarinpirate.pinetimegear.ui.theme.PineTimeGearCompanionAppTheme
 import dagger.hilt.android.AndroidEntryPoint
-import kotlin.reflect.KClass
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -85,7 +83,7 @@ class MainActivity : ComponentActivity() {
                 val activeChipRes = android.R.drawable.checkbox_on_background
                 val inactiveChipRes = android.R.drawable.checkbox_off_background
 
-                LaunchedEffect(Unit) {//hardware checking, needs to be checked one time
+                LaunchedEffect(Unit) {//hardware checking, needs to be checked one time  //todo move it into viewModel
                     val isBluetoothAvailable =
                         packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)
                     val isBluetoothLEAvailable =
@@ -102,7 +100,7 @@ class MainActivity : ComponentActivity() {
                         val deniedPermissions =
                             context.getNotGrantedPermissions(getBluetoothPermission().toList())
                         if (deniedPermissions.isNotEmpty()) {
-                            if (uiState.isItFirstOnResume) { //i added condition here to do not handle sendEvent every onResume cause if even user denie perm after he provides it will be first onResume again because android will recreate activity
+                            if (uiState.isItFirstOnResume) { //I added condition here to do not handle sendEvent every onResume cause if even user denie perm after he provides it will be first onResume again because android will recreate activity
                                 viewModel.sendEvent(
                                     MainEvent.OnNotGrantedPermissions(
                                         deniedPermissions
@@ -209,7 +207,7 @@ fun MainScreenContent(
     Column(modifier) {
         if (uiState.issues.isNotEmpty()) {
             val issues =
-                uiState.issues.toList().map { mapIssueTypeToIssueMessageUI(it.second) }
+                uiState.issues.map { mapIssueTypeToIssueMessageUI(it) }
             LazyIssueContainer(issues = issues, sendEvent = sendEvent)
         }
         if (uiState.scannedDevices.isNotEmpty()) {
@@ -295,7 +293,7 @@ fun LazyIssueContainer(
 
                 is BluetoothIssueType.HardwareIssue -> sendEvent(MainEvent.DismissAlertDialog)
                 is BluetoothIssueType.Permissions -> {
-                    when (issueType.status) { // cause of that we have only one contract for all perm(bluetooth and location) i've decided to do not double code and have written checking in this way
+                    when (issueType.status) { // cause of that we have only one contract for all perm(bluetooth and location) I've decided to do not double code and have written checking in this way
                         IssuePermissionStatus.NOT_GRANTED -> bluetoothPermissionContract.launch(
                             getBluetoothPermission()
                         )
@@ -376,8 +374,8 @@ fun MainScreenContentPreview() {
 @Preview(showBackground = true)
 @Composable
 fun MainScreenContentPreviewBluetoothIsNotAvailable() {
-    val newIssues: MutableMap<KClass<out BluetoothIssueType>, BluetoothIssueType> = mutableMapOf()
-    newIssues.putUsingClassAsAKey(BluetoothIssueType.HardwareIssue.BluetoothIsNotAvailable)
+    val newIssues: MutableSet<BluetoothIssueType> = mutableSetOf()
+    newIssues.add(BluetoothIssueType.HardwareIssue.BluetoothIsNotAvailable)
     PineTimeGearCompanionAppTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             MainScreenContent(
@@ -391,8 +389,8 @@ fun MainScreenContentPreviewBluetoothIsNotAvailable() {
 @Preview(showBackground = true)
 @Composable
 fun MainScreenContentPreviewBLEIsNotAvailable() {
-    val newIssues: MutableMap<KClass<out BluetoothIssueType>, BluetoothIssueType> = mutableMapOf()
-    newIssues.putUsingClassAsAKey(BluetoothIssueType.HardwareIssue.BLEIsNotAvailable)
+    val newIssues: MutableSet<BluetoothIssueType> = mutableSetOf()
+    newIssues.add(BluetoothIssueType.HardwareIssue.BLEIsNotAvailable)
     PineTimeGearCompanionAppTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             MainScreenContent(
@@ -406,11 +404,9 @@ fun MainScreenContentPreviewBLEIsNotAvailable() {
 @Preview(showBackground = true)
 @Composable
 fun MainScreenContentPreviewBluetoothAndBLEAreNotAvailable() {
-    val newIssues: MutableMap<KClass<out BluetoothIssueType>, BluetoothIssueType> = mutableMapOf()
-    newIssues.putUsingClassAsAKey(
-        BluetoothIssueType.HardwareIssue.BLEIsNotAvailable,
-        BluetoothIssueType.HardwareIssue.BluetoothIsNotAvailable
-    )
+    val newIssues: MutableSet<BluetoothIssueType> = mutableSetOf()
+    newIssues.add(BluetoothIssueType.HardwareIssue.BLEIsNotAvailable)
+    newIssues.add(BluetoothIssueType.HardwareIssue.BluetoothIsNotAvailable)
     PineTimeGearCompanionAppTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             MainScreenContent(
@@ -424,12 +420,10 @@ fun MainScreenContentPreviewBluetoothAndBLEAreNotAvailable() {
 @Preview(showBackground = true)
 @Composable
 fun MainScreenContentPreviewFullOfIssue() {
-    val newIssues: MutableMap<KClass<out BluetoothIssueType>, BluetoothIssueType> = mutableMapOf()
-    newIssues.putUsingClassAsAKey(
-        BluetoothIssueType.HardwareIssue.BLEIsNotAvailable,
-        BluetoothIssueType.HardwareIssue.BluetoothIsNotAvailable,
-        BluetoothIssueType.BluetoothIsNotEnabled,
-    )
+    val newIssues: MutableSet<BluetoothIssueType> = mutableSetOf()
+    newIssues.add(BluetoothIssueType.HardwareIssue.BLEIsNotAvailable)
+    newIssues.add(BluetoothIssueType.HardwareIssue.BluetoothIsNotAvailable)
+    newIssues.add(BluetoothIssueType.BluetoothIsNotEnabled)
     PineTimeGearCompanionAppTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             MainScreenContent(
