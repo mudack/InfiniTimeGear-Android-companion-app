@@ -1,5 +1,8 @@
 <resources>
     <string name="app_name">PineTime Gear Companion App</string>
+
+    <string name="fab_icon_onboarding_next_description">This is FAB button what opens scan screen</string>
+
     <string name="navigation_no_saved_device_message">No saved device. Please select a device.</string>
     <string name="onboarding_title">Onboarding</string>
     <string name="onboarding_continue_button">Continue</string>
@@ -64,5 +67,6 @@
     <string name="issue_message_bluetooth_power_optimized_scan_unsupported">The device\'s Bluetooth controller does not support hardware-level power-optimized scanning. Try switching to a balanced or low-latency scan mode in settings.</string>
     <string name="issue_title_bluetooth_undefined_error">Undefined bluetooth error with code %d</string>
     <string name="issue_message_bluetooth_undefined_error">Undefined error occurs with code %d</string>
+    <string name="onboarding_text">Hello this is my companion app\nfor PineTime watch with my fork of Infinitime/Gear\n\nWelcome</string>
 
 </resources>

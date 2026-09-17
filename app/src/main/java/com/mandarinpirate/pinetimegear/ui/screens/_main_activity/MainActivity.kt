@@ -27,6 +27,8 @@ import com.mandarinpirate.pinetimegear.ui.screens.scan.ScanScreen
 import com.mandarinpirate.pinetimegear.ui.theme.PineTimeGearCompanionAppTheme
 import dagger.hilt.android.AndroidEntryPoint
 import com.mandarinpirate.pinetimegear.ui.screens._main_activity.MainActivityRoute.*
+import com.mandarinpirate.pinetimegear.ui.screens.onboarding.OnboardingScreen
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,16 +67,14 @@ private fun NavGraph(
         startDestination = destination.route
     ) {
         composable<OnboardingRoute> {
-            OnboardingPlaceholder(
-                onFinished = {
-                    viewModel.completeOnboarding()
-                    navController.navigate(ScanRoute) {
-                        popUpTo<OnboardingRoute> {
-                            inclusive = true
-                        }
+            OnboardingScreen(onFinished = {
+                viewModel.completeOnboarding()
+                navController.navigate(ScanRoute) {
+                    popUpTo<OnboardingRoute> {
+                        inclusive = true
                     }
                 }
-            )
+            })
         }
 
         composable<ScanRoute> {
