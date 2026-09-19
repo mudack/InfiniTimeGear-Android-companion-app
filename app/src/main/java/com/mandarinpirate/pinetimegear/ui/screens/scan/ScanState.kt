@@ -9,9 +9,10 @@ data class ScanState(
     val alertDialogData: AlertDialogData? = null,
     val isBluetoothEnabled: Boolean = false,
     val isItFirstOnResume: Boolean = true,
-    val scannedDevices: List<BluetoothDeviceUi> = emptyList(),
+    val scannedDevices: Set<BluetoothDeviceUi> = emptySet(),
     val fabState: ScanScreenFabState = ScanScreenFabState.ISSUE,
     val scrollToTheEnd : Boolean = false,
+    val pairedDevices: Set<BluetoothDeviceUi> = emptySet()
 )
 
 enum class ScanScreenFabState{

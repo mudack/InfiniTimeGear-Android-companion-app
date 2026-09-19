@@ -68,5 +68,7 @@
     <string name="issue_title_bluetooth_undefined_error">Undefined bluetooth error with code %d</string>
     <string name="issue_message_bluetooth_undefined_error">Undefined error occurs with code %d</string>
     <string name="onboarding_text">Hello this is my companion app\nfor PineTime watch with my fork of Infinitime/Gear\n\nWelcome</string>
+    <string name="scan_screen_scan_new_devices">Scan new devices</string>
+    <string name="scan_screen_paired_devices">Paired devices</string>
 
 </resources>

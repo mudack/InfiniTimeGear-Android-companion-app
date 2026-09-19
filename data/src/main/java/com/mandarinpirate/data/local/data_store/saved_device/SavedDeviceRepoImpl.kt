@@ -18,14 +18,14 @@ class SavedDeviceRepoImpl(
             val address = preferences[KEY_ADDRESS] ?: return@map null
             BluetoothDevice(
                 name = preferences[KEY_NAME].orEmpty(),
-                address = address
+                macAddress = address
             )
         }
 
     override suspend fun saveDevice(device: BluetoothDevice) {
         preferencesDataStore.edit { preferences ->
             preferences[KEY_NAME] = device.name
-            preferences[KEY_ADDRESS] = device.address
+            preferences[KEY_ADDRESS] = device.macAddress
         }
     }
 

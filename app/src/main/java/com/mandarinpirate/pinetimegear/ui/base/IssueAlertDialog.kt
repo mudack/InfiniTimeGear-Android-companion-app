@@ -54,7 +54,7 @@ fun IssueAlertDialog(
                 Button(
                     modifier = Modifier.align(Alignment.End),
                     onClick = alertDialogData.btnOnClick
-                        ?: throw RuntimeException("lambda was not provided for alertDialog btn please fix it, you can find it by todo list in IDE")
+                        ?: throw RuntimeException("lambda was not provided for alertDialog, please don't forget to make alertDialog state null to hide the alertDialog")
                 ) {
                     Text(alertDialogData.btnText)
                 }

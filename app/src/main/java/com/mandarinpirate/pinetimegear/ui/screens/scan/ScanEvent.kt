@@ -2,6 +2,7 @@ package com.mandarinpirate.pinetimegear.ui.screens.scan
 
 import com.mandarinpirate.domain.models.BluetoothDevice
 import com.mandarinpirate.pinetimegear.ui.entities.AlertDialogData
+import com.mandarinpirate.pinetimegear.ui.entities.BluetoothDeviceUi
 
 sealed interface ScanEvent {
     data object FirstOnResume : ScanEvent
@@ -24,4 +25,6 @@ sealed interface ScanEvent {
 
     data class OnScanResult(val scannedDevice: BluetoothDevice): ScanEvent
     data class OnScanFailed(val errorCode: Int, val alertDialogData: AlertDialogData): ScanEvent
+
+    data class DeviceSelected(val device: BluetoothDeviceUi): ScanEvent
 }

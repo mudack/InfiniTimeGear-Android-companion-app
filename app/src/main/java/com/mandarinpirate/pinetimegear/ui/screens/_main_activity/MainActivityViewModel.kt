@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.mandarinpirate.domain.repos.PreferencesStoreRepo
 import com.mandarinpirate.domain.repos.SavedDeviceRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,7 +25,7 @@ class MainActivityViewModel @Inject constructor(
         _startDestination.asStateFlow()
 
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             _startDestination.value = combine(
                 preferencesStoreRepo.getIsItFirstAppStart(),
                 savedDeviceRepo.observeSavedDevice()
@@ -39,7 +40,7 @@ class MainActivityViewModel @Inject constructor(
     }
 
     fun completeOnboarding() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             preferencesStoreRepo.setIsItFirstAppStartFalse()
         }
     }

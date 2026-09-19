@@ -23,10 +23,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.mandarinpirate.pinetimegear.R
+import com.mandarinpirate.pinetimegear.ui.screens.ScreenRoute
 import com.mandarinpirate.pinetimegear.ui.screens.scan.ScanScreen
 import com.mandarinpirate.pinetimegear.ui.theme.PineTimeGearCompanionAppTheme
 import dagger.hilt.android.AndroidEntryPoint
-import com.mandarinpirate.pinetimegear.ui.screens._main_activity.MainActivityRoute.*
+import com.mandarinpirate.pinetimegear.ui.screens.ScreenRoute.*
 import com.mandarinpirate.pinetimegear.ui.screens.onboarding.OnboardingScreen
 
 @AndroidEntryPoint
@@ -78,7 +79,7 @@ private fun NavGraph(
         }
 
         composable<ScanRoute> {
-            ScanScreen()
+            ScanScreen(navController)
         }
 
         composable<MainMenuRoute> {
@@ -100,21 +101,12 @@ private fun NavGraph(
     }
 }
 
-private val MainActivityStartDestination.route: MainActivityRoute
+private val MainActivityStartDestination.route: ScreenRoute
     get() = when (this) {
         MainActivityStartDestination.ONBOARDING -> OnboardingRoute
         MainActivityStartDestination.MAIN_MENU -> MainMenuRoute
         MainActivityStartDestination.SCAN_DEVICE_MISSING -> ScanRoute
     }
-
-@Composable
-private fun OnboardingPlaceholder(onFinished: () -> Unit) {
-    PlaceholderScreen(
-        title = stringResource(R.string.onboarding_title),
-        buttonText = stringResource(R.string.onboarding_continue_button),
-        onButtonClick = onFinished
-    )
-}
 
 @Composable
 private fun MainMenuPlaceholder(

@@ -88,7 +88,7 @@ class SafeBleScannerImpl(
             performStartScan(onScanResult = { callbackType, result ->
                 val device = BluetoothDevice(
                     name = result?.device?.name.toString(),
-                    address = result?.device?.address.toString()
+                    macAddress = result?.device?.address.toString()
                 )
                 onScanResult.invoke(callbackType, device)
             }, onScanFailed = onScanFailed, filters.toAndroidScanFilterList())
