@@ -30,7 +30,7 @@ import com.mandarinpirate.pinetimegear.R
 import com.mandarinpirate.pinetimegear.ui.entities.IssueLevel
 import com.mandarinpirate.pinetimegear.ui.entities.IssueMessageUI
 import com.mandarinpirate.pinetimegear.ui.entities.IssuePermissionStatus
-import com.mandarinpirate.pinetimegear.ui.entities.BluetoothIssueType
+import com.mandarinpirate.pinetimegear.ui.entities.AppIssueType
 import com.mandarinpirate.pinetimegear.ui.theme.PineTimeGearCompanionAppTheme
 
 @Composable
@@ -85,19 +85,19 @@ fun IssueMessagePreview() {
             val newIssues = mutableSetOf(
                 IssueMessageUI(
                     message = stringResource(R.string.issue_bluetooth_is_not_supported),
-                    type = BluetoothIssueType.HardwareIssue.BluetoothIsNotAvailable
+                    type = AppIssueType.HardwareIssue.BluetoothIsNotAvailable
                 ),
                 IssueMessageUI(
                     message = stringResource(R.string.issue_ble_is_not_supported),
-                    type = BluetoothIssueType.HardwareIssue.BLEIsNotAvailable
+                    type = AppIssueType.HardwareIssue.BLEIsNotAvailable
                 ),
                 IssueMessageUI(
                     message = stringResource(R.string.issue_title_location_permission_is_not_granted),
-                    type =  BluetoothIssueType.Permissions.FineLocation(IssuePermissionStatus.NOT_GRANTED)
+                    type =  AppIssueType.Permissions.FineLocation(IssuePermissionStatus.NOT_GRANTED)
                 ),
                 IssueMessageUI(
                     message = stringResource(R.string.issue_title_bluetooth_permission_is_not_granted),
-                    type =  BluetoothIssueType.Permissions.Bluetooth(IssuePermissionStatus.NOT_GRANTED)
+                    type =  AppIssueType.Permissions.Bluetooth(IssuePermissionStatus.NOT_GRANTED)
                 )
 
             )

@@ -28,6 +28,7 @@
         android:name="android.permission.ACCESS_FINE_LOCATION"
         android:maxSdkVersion="30" />
 
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".App"
@@ -50,6 +51,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".BleForegroundService"
+            android:foregroundServiceType="connectedDevice"
+            android:exported="false">
+        </service>
     </application>
 
 </manifest>

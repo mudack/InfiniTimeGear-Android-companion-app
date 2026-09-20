@@ -13,7 +13,7 @@ import com.mandarinpirate.pinetimegear.Const.PINETIME_UUID_SERVICE
 import com.mandarinpirate.pinetimegear.ui.entities.AlertDialogData
 import com.mandarinpirate.pinetimegear.ui.entities.BluetoothDeviceUi
 import com.mandarinpirate.pinetimegear.ui.entities.IssuePermissionStatus
-import com.mandarinpirate.pinetimegear.ui.entities.BluetoothIssueType
+import com.mandarinpirate.pinetimegear.ui.entities.AppIssueType
 import com.mandarinpirate.pinetimegear.ui.getIssueTypeByPermission
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
@@ -54,19 +54,7 @@ class ScanViewModel @Inject constructor(
             uiState
                 .map { state -> state.issues }
                 .distinctUntilChanged()
-                .collect { issues ->
-                    if (issues.isNotEmpty()) stopBleScanning()
-                    if (issues.isEmpty() || issues.all { it !is BluetoothIssueType.Permissions }) {
-                        _uiState.update { state ->
-                            state.copy(
-                                pairedDevices = bluetoothManager.adapter.bondedDevices.toList()
-                                    .map {
-                                        BluetoothDeviceUi(name = it.name, macAddress = it.address)
-                                    }.toSet()
-                            )
-                        }
-                    }
-                }
+                .collect { issues -> if (issues.isNotEmpty()) stopBleScanning() }
         }
     }
 
@@ -108,8 +96,8 @@ class ScanViewModel @Inject constructor(
 
             is ScanEvent.InitBluetoothAvailability -> {
                 val newIssues = uiState.value.issues.toMutableSet()
-                if (!event.isBluetoothAvailable) newIssues.add(BluetoothIssueType.HardwareIssue.BluetoothIsNotAvailable)
-                if (!event.isBluetoothLEAvailable) newIssues.add(BluetoothIssueType.HardwareIssue.BLEIsNotAvailable)
+                if (!event.isBluetoothAvailable) newIssues.add(AppIssueType.HardwareIssue.BluetoothIsNotAvailable)
+                if (!event.isBluetoothLEAvailable) newIssues.add(AppIssueType.HardwareIssue.BLEIsNotAvailable)
 
                 _uiState.update {
                     it.copy(
@@ -124,21 +112,30 @@ class ScanViewModel @Inject constructor(
             ScanEvent.RequireToCheckIsBluetoothEnabled -> {
                 val newIssues = _uiState.value.issues.toMutableSet()
                 if (!bluetoothManager.adapter.isEnabled) {
-                    newIssues.add(BluetoothIssueType.BluetoothIsNotEnabled)
+                    newIssues.add(AppIssueType.BluetoothIsNotEnabled)
                     _uiState.update {
                         it.copy(
                             issues = newIssues,
                             fabState = getFabState(newIssues.isEmpty())
                         )
                     }
+                } else {
+                    if (uiState.value.issues.contains(AppIssueType.BluetoothIsNotEnabled)) {
+                        newIssues.minusElement(AppIssueType.BluetoothIsNotEnabled)
+                        _uiState.update {
+                            it.copy(
+                                issues = newIssues,
+                                fabState = getFabState(newIssues.isEmpty())
+                            )
+                        }
+                    }
                 }
             }
 
             is ScanEvent.TryToEnableBluetooth -> {
                 val newIssues = _uiState.value.issues.toMutableSet()
-                if (event.isSuccessful)
-                    newIssues.add(BluetoothIssueType.BluetoothIsNotEnabled)
-                else newIssues.add(BluetoothIssueType.BluetoothIsNotEnabled)
+                if (!event.isSuccessful)
+                    newIssues.add(AppIssueType.BluetoothIsNotEnabled)
 
                 _uiState.update {
                     it.copy(
@@ -152,15 +149,34 @@ class ScanViewModel @Inject constructor(
             is ScanEvent.DismissAlertDialog -> _uiState.update { it.copy(alertDialogData = null) }
             is ScanEvent.ShowUpAlertDialog -> _uiState.update { it.copy(alertDialogData = event.alertDialogData) }
 
-            ScanEvent.OnAllPermissionAreGranted -> {
-                val updatedIssues = _uiState.value.issues
-                    .filter { it !is BluetoothIssueType.Permissions }
-                    .toMutableSet()
+            is ScanEvent.OnGrantedPermissions -> {
+
+                val grantedPermissionsInIssueType: Set<AppIssueType> = getIssueTypeByPermission(
+                    event.grantedPermission,
+                    IssuePermissionStatus.NOT_GRANTED
+                )
+
+                val updatedIssues = uiState.value.issues.filterNot { issue ->
+                    grantedPermissionsInIssueType.any{ granted ->
+                        issue::class == granted::class
+                    }
+                }.toSet()
+
+                val updatedPairedDevices =
+                    if (updatedIssues.isEmpty()) //I've done it this way, so user is not available to select device in case all perm are granted except Notification, bcs foreground service requires notification to be shown
+                        bluetoothManager.adapter.bondedDevices.toList()
+                            .map {
+                                BluetoothDeviceUi(name = it.name, macAddress = it.address)
+                            }.toSet()
+                    else _uiState.value.pairedDevices
+
                 _uiState.update {
                     it.copy(
                         alertDialogData = null,
                         issues = updatedIssues,
-                        fabState = getFabState(updatedIssues.isEmpty())
+                        fabState = getFabState(updatedIssues.isEmpty()),
+                        pairedDevices = updatedPairedDevices
+
                     )
                 }
             }
@@ -200,16 +216,32 @@ class ScanViewModel @Inject constructor(
             is ScanEvent.DeviceSelected -> {
                 val blAdapter = bluetoothManager.adapter
                 val isValid = BluetoothAdapter.checkBluetoothAddress(event.device.macAddress)
-                if(isValid) {
-                    _uiState.update { it.copy(alertDialogData = AlertDialogData("Success", message = "The ${event.device.name} is valid! Congrats!!!", "ok", btnOnClick = {_uiState.update { it.copy(alertDialogData = null) }})) }
+                if (isValid) {
+                    _uiState.update {
+                        it.copy(
+                            alertDialogData = AlertDialogData(
+                                "Success",
+                                message = "The ${event.device.name} is valid! Congrats!!!",
+                                "ok",
+                                btnOnClick = { _uiState.update { it.copy(alertDialogData = null) } })
+                        )
+                    }
 //                    val device = blAdapter.getRemoteDevice(event.device.macAddress) // todo send this device object to new ForegroundService
 ////                    device.connectGatt(bzzluetoothGattConnectionSettings)
 //                    viewModelScope.launch(Dispatchers.IO) {
 //                        savedDeviceRepo.saveDevice(event.device.toDomainBluetoothDevice())
 //                        _sharedStateOpenNextScreen.emit(true)
 //                    }
-                }else{
-                    _uiState.update { it.copy(alertDialogData = AlertDialogData("Invalid mac addr device", message = "Try again", "ok", btnOnClick = {_uiState.update { it.copy(alertDialogData = null) }})) } //todo better replace with res
+                } else {
+                    _uiState.update {
+                        it.copy(
+                            alertDialogData = AlertDialogData(
+                                "Invalid mac addr device",
+                                message = "Try again",
+                                "ok",
+                                btnOnClick = { _uiState.update { it.copy(alertDialogData = null) } })
+                        )
+                    } //todo better replace with res
                 }
             }
         }
@@ -244,25 +276,25 @@ class ScanViewModel @Inject constructor(
                         )
 
                         ScanStatus.ScanFailed.PowerOptimizedScanUnsupported -> addIssue(
-                            BluetoothIssueType.BluetoothScanIssue.PowerOptimizedScanUnsupported
+                            AppIssueType.BluetoothScanIssue.PowerOptimizedScanUnsupported
                         )
 
                         ScanStatus.ScanFailed.ApplicationRegistrationFailed -> addIssue(
-                            BluetoothIssueType.BluetoothScanIssue.ApplicationRegistrationFailed
+                            AppIssueType.BluetoothScanIssue.ApplicationRegistrationFailed
                         )
 
-                        ScanStatus.ScanFailed.OutOfHardwareResources -> addIssue(BluetoothIssueType.BluetoothScanIssue.OutOfHardwareResources)
-                        ScanStatus.ScanFailed.InternalError -> addIssue(BluetoothIssueType.BluetoothScanIssue.InternalError)
+                        ScanStatus.ScanFailed.OutOfHardwareResources -> addIssue(AppIssueType.BluetoothScanIssue.OutOfHardwareResources)
+                        ScanStatus.ScanFailed.InternalError -> addIssue(AppIssueType.BluetoothScanIssue.InternalError)
                         ScanStatus.ScanFailed.ThisAppTriesScanToFrequently -> addIssue(
-                            BluetoothIssueType.BluetoothScanIssue.ThisAppTriesScanToFrequently
+                            AppIssueType.BluetoothScanIssue.ThisAppTriesScanToFrequently
                         )
 
                         ScanStatus.ScanFailed.ScanWithSameSettingsIsAlreadyStarted -> addIssue(
-                            BluetoothIssueType.BluetoothScanIssue.ScanWithSameSettingsIsAlreadyStarted
+                            AppIssueType.BluetoothScanIssue.ScanWithSameSettingsIsAlreadyStarted
                         )
 
                         is ScanStatus.ScanFailed.UndefinedErrorCode -> addIssue(
-                            BluetoothIssueType.BluetoothScanIssue.UndefinedError(value.errorCode)
+                            AppIssueType.BluetoothScanIssue.UndefinedError(value.errorCode)
                         )
                     }
 
@@ -283,13 +315,29 @@ class ScanViewModel @Inject constructor(
         notGrantedPermissions: List<String>,
         permissionStatus: IssuePermissionStatus
     ) {
-        val newIssueMessages = getIssueTypeByPermission(notGrantedPermissions, permissionStatus)
-        val issue: Set<BluetoothIssueType> = _uiState.value.issues.plus(newIssueMessages)
-        _uiState.update { it.copy(issues = issue, fabState = getFabState(issue.isEmpty())) }
+        val newIssues =
+            getIssueTypeByPermission(notGrantedPermissions, permissionStatus)
+
+        _uiState.update { state ->
+
+            val updatedIssues = state.issues
+                .filterNot { oldIssue ->
+                    newIssues.any { newIssue ->
+                        oldIssue::class == newIssue::class
+                    }
+                }
+                .toSet()
+                .plus(newIssues)
+
+            state.copy(
+                issues = updatedIssues,
+                fabState = getFabState(updatedIssues.isEmpty())
+            )
+        }
     }
 
-    private fun addIssue(issueType: BluetoothIssueType) {
-        val issue: Set<BluetoothIssueType> =
+    private fun addIssue(issueType: AppIssueType) {
+        val issue: Set<AppIssueType> =
             _uiState.value.issues.plus(issueType)
         _uiState.update {
             it.copy(

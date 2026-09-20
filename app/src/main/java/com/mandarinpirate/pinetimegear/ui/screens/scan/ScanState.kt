@@ -2,10 +2,10 @@ package com.mandarinpirate.pinetimegear.ui.screens.scan
 
 import com.mandarinpirate.pinetimegear.ui.entities.AlertDialogData
 import com.mandarinpirate.pinetimegear.ui.entities.BluetoothDeviceUi
-import com.mandarinpirate.pinetimegear.ui.entities.BluetoothIssueType
+import com.mandarinpirate.pinetimegear.ui.entities.AppIssueType
 
 data class ScanState(
-    val issues : Set<BluetoothIssueType> = emptySet(),
+    val issues : Set<AppIssueType> = emptySet(),
     val alertDialogData: AlertDialogData? = null,
     val isBluetoothEnabled: Boolean = false,
     val isItFirstOnResume: Boolean = true,

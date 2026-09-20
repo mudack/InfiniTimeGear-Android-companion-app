@@ -6,7 +6,15 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.content.ContextCompat
 import com.mandarinpirate.pinetimegear.ui.entities.IssuePermissionStatus
-import com.mandarinpirate.pinetimegear.ui.entities.BluetoothIssueType
+import com.mandarinpirate.pinetimegear.ui.entities.AppIssueType
+
+fun getAllPermissionWhatNeedForProperAppWork(): Array<String> {
+    var allRequiredPerm: Array<String> = getBluetoothPermission()
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        allRequiredPerm = allRequiredPerm.plus(Manifest.permission.POST_NOTIFICATIONS)
+    }
+    return allRequiredPerm
+}
 
 fun getBluetoothPermission(): Array<String> = if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
     arrayOf(
@@ -30,31 +38,37 @@ fun Context.checkSelfAllPermissions(permissions: List<String>): Boolean {
 }
 
 
-fun bluetoothPermissionGrantedHandler(
+fun permissionGrantedHandler(
     permissionMap: Map<String, @JvmSuppressWildcards Boolean>,
-    allGranted: () -> Unit,
-    notAllGranted: (notGrantedPermissions: List<String>) -> Unit
+    gratedPermissions: (grantedPermissions: List<String>) -> Unit,
+    notGrantedPermissions: (notGrantedPermissions: List<String>) -> Unit
 ) {
     val notGrantedPermissions =
-        permissionMap.filter { !it.value }.map { it.key } //filter only not granted permissions
+        permissionMap.filter { !it.value }.map { it.key } //filter only granted permissions{
+    val grantedPermissions =
+        permissionMap.filter { it.value }.map { it.key } //filter only not granted permissions
 
-    if (notGrantedPermissions.isEmpty()) allGranted()
-    else notAllGranted(notGrantedPermissions)
+    if (grantedPermissions.isNotEmpty()) gratedPermissions(grantedPermissions)
+    if (notGrantedPermissions.isNotEmpty()) notGrantedPermissions(notGrantedPermissions)
 }
 
 fun getIssueTypeByPermission(
     notGrantedPermission: List<String>, permissionStatus: IssuePermissionStatus
-): Set<BluetoothIssueType> {
-    val result = emptySet<BluetoothIssueType>().toMutableSet()
+): Set<AppIssueType> {
+    val result = emptySet<AppIssueType>().toMutableSet()
 
     notGrantedPermission.forEach {
         result.add(
             when (it) {
-                Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN -> BluetoothIssueType.Permissions.Bluetooth(
+                Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN -> AppIssueType.Permissions.Bluetooth(
                     permissionStatus
                 )
 
-                Manifest.permission.ACCESS_FINE_LOCATION -> BluetoothIssueType.Permissions.FineLocation(
+                Manifest.permission.ACCESS_FINE_LOCATION -> AppIssueType.Permissions.FineLocation(
+                    permissionStatus
+                )
+
+                Manifest.permission.POST_NOTIFICATIONS -> AppIssueType.Permissions.PostNotification(
                     permissionStatus
                 )
 
@@ -68,7 +82,7 @@ fun getIssueTypeByPermission(
 fun Context.getNotGrantedPermissions(permissionList: List<String>): List<String> {
     val notGrantedPermissions = mutableListOf<String>()
     permissionList.forEach {
-        if (ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_DENIED) {
+        if (ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED) {
             notGrantedPermissions.add(it)
         }
     }

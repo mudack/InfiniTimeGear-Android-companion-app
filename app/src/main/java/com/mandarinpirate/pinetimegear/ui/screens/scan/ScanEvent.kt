@@ -9,10 +9,10 @@ sealed interface ScanEvent {
     data class OnFabPressed(val issueExistsDialogData: AlertDialogData) : ScanEvent
     data object ScrollDownChipClicked : ScanEvent
     data object DismissAlertDialog : ScanEvent
-    data object OnAllPermissionAreGranted : ScanEvent
     data object EnablingBluetoothNoPermissionException : ScanEvent
     data object RequireToCheckIsBluetoothEnabled: ScanEvent //actually it trigger UI to check bluetooth to be enabled and if android ver. is <=11 will also trigger to check location
 
+    data class OnGrantedPermissions(val grantedPermission: List<String>): ScanEvent
     data class OnDeniedPermissions(val deniedPermission: List<String>): ScanEvent //send when app tried to get prem access but it was denied by user
 
     data class OnNotGrantedPermissions(val notGrantedPermission: List<String>): ScanEvent //send when app have spotted that perm is not granted

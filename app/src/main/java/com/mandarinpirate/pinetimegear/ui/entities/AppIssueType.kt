@@ -1,22 +1,23 @@
 package com.mandarinpirate.pinetimegear.ui.entities
 
-sealed class BluetoothIssueType(val level: IssueLevel) {
+sealed class AppIssueType(val level: IssueLevel) {
 
-    data object BluetoothIsNotEnabled : BluetoothIssueType(IssueLevel.FIXABLE)
+    data object BluetoothIsNotEnabled : AppIssueType(IssueLevel.FIXABLE)
 
-    sealed class HardwareIssue : BluetoothIssueType(IssueLevel.NOT_FIXABLE) {
+    sealed class HardwareIssue : AppIssueType(IssueLevel.NOT_FIXABLE) {
         data object BluetoothIsNotAvailable : HardwareIssue()
         data object BLEIsNotAvailable : HardwareIssue()
     }
 
-    sealed class Permissions(open val status: IssuePermissionStatus) : BluetoothIssueType(IssueLevel.FIXABLE) {
+    sealed class Permissions(open val status: IssuePermissionStatus) : AppIssueType(IssueLevel.FIXABLE) {
         data class Bluetooth(override val status: IssuePermissionStatus) : Permissions(status)
         data class FineLocation(override val status: IssuePermissionStatus) : Permissions(status)
+        data class PostNotification(override val status: IssuePermissionStatus) : Permissions(status)
     }
     sealed class BluetoothScanIssue(
         level: IssueLevel,
         open val errorCode: Int
-    ) : BluetoothIssueType(level){
+    ) : AppIssueType(level){
         data object ScanWithSameSettingsIsAlreadyStarted : BluetoothScanIssue(IssueLevel.WARNING, errorCode = 1)
         data object ApplicationRegistrationFailed : BluetoothScanIssue(IssueLevel.WARNING, errorCode = 2)
         data object InternalError : BluetoothScanIssue(IssueLevel.WARNING, errorCode = 3)
@@ -29,7 +30,7 @@ sealed class BluetoothIssueType(val level: IssueLevel) {
 }
 
 enum class IssuePermissionStatus {
-    NOT_GRANTED, //not granted means it means it's first time app to be launched and user have never asked to provide permission
+    NOT_GRANTED, //not granted means it's first time app to be launched and user have never asked to provide permission
     DENIED //denied means user was asked to provide permission but he/she denied it and permission was not provided
 }
 enum class IssueLevel {

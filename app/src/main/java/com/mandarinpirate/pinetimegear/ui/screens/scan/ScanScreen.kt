@@ -54,8 +54,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
-import androidx.navigation.NavGraph
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.mandarinpirate.pinetimegear.Const.BLUETOOTH_ICON_PAINTER_RES
@@ -66,12 +64,13 @@ import com.mandarinpirate.pinetimegear.ui.base.IssueAlertDialog
 import com.mandarinpirate.pinetimegear.ui.base.IssueMessage
 import com.mandarinpirate.pinetimegear.ui.base.util.LifecycleTracker
 import com.mandarinpirate.pinetimegear.ui.base.util.WindowFocusTracker
-import com.mandarinpirate.pinetimegear.ui.bluetoothPermissionGrantedHandler
+import com.mandarinpirate.pinetimegear.ui.permissionGrantedHandler
 import com.mandarinpirate.pinetimegear.ui.entities.AlertDialogData
 import com.mandarinpirate.pinetimegear.ui.entities.BluetoothDeviceUi
-import com.mandarinpirate.pinetimegear.ui.entities.BluetoothIssueType
+import com.mandarinpirate.pinetimegear.ui.entities.AppIssueType
 import com.mandarinpirate.pinetimegear.ui.entities.IssueMessageUI
 import com.mandarinpirate.pinetimegear.ui.entities.IssuePermissionStatus
+import com.mandarinpirate.pinetimegear.ui.getAllPermissionWhatNeedForProperAppWork
 import com.mandarinpirate.pinetimegear.ui.getBluetoothPermission
 import com.mandarinpirate.pinetimegear.ui.getNotGrantedPermissions
 import com.mandarinpirate.pinetimegear.ui.screens.ScreenRoute
@@ -97,7 +96,7 @@ fun ScanScreen(navController: NavHostController) {
             )
         )
         viewModel.sharedStateOpenNextScreen.collect { shouldOpenNextScreen ->
-            if(shouldOpenNextScreen){
+            if (shouldOpenNextScreen) {
                 navController.navigate(ScreenRoute.MainMenuRoute) {
                     popUpTo<OnboardingRoute> {
                         inclusive = true
@@ -106,21 +105,27 @@ fun ScanScreen(navController: NavHostController) {
             }
         }
     }
+
+    val allPerm = getAllPermissionWhatNeedForProperAppWork().toList()
     LifecycleTracker(
         onResume = {
-            val deniedPermissions =
-                context.getNotGrantedPermissions(getBluetoothPermission().toList())
-            if (deniedPermissions.isNotEmpty()) {
-                if (uiState.isItFirstOnResume) { //I added condition here to do not handle sendEvent every onResume cause if even user denie perm after he provides it will be first onResume again because android will recreate activity
+            val notGrantedPermissions =
+                context.getNotGrantedPermissions(allPerm)
+
+            if (notGrantedPermissions.isNotEmpty()) {
+                if (uiState.isItFirstOnResume) { //I added condition here to do not handle sendEvent every onResume cause if even user denied perm after he provides it will be first onResume again because android will recreate activity
                     viewModel.sendEvent(
                         ScanEvent.OnNotGrantedPermissions(
-                            deniedPermissions
+                            notGrantedPermissions
                         )
                     )
                     viewModel.sendEvent(ScanEvent.FirstOnResume)
+                }else{
+                    val res = allPerm.minus(notGrantedPermissions.toSet())
+                    viewModel.sendEvent(ScanEvent.OnGrantedPermissions(res))
                 }
             } else {
-                viewModel.sendEvent(ScanEvent.OnAllPermissionAreGranted)
+                viewModel.sendEvent(ScanEvent.OnGrantedPermissions(allPerm))
             }
         }
     )
@@ -221,7 +226,7 @@ fun PairedDevicesContent(
         }
     } else {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(text = stringResource(R.string.text_no_scanned_devices))
+            Text(text = stringResource(R.string.text_no_paired_devices))
         }
     }
 }
@@ -262,9 +267,10 @@ fun ScanNewDeviceContent(
 @Composable
 fun BleDevice(device: BluetoothDeviceUi, onClick: () -> Unit) {
     Card(Modifier.fillMaxWidth()) {
-        Row {
+        Row(Modifier.align(alignment = Alignment.CenterHorizontally)) {
             Text(
                 modifier = Modifier
+                    .fillMaxWidth()
                     .padding(horizontal = dimensionResource(R.dimen.scanned_device_list_item_horizontal_padding))
                     .clickable(enabled = true, onClick = onClick),
                 text = device.name + "\n" + device.macAddress
@@ -286,20 +292,20 @@ fun LazyIssueContainer(
         sendEvent(ScanEvent.TryToEnableBluetooth(result.resultCode == RESULT_OK))
     }
 
-    val bluetoothPermissionContract = rememberLauncherForActivityResult(
+    val permissionContract = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { result ->
-        bluetoothPermissionGrantedHandler(
+        permissionGrantedHandler(
             permissionMap = result,
-            allGranted = { sendEvent(ScanEvent.OnAllPermissionAreGranted) },
-            notAllGranted = { sendEvent(ScanEvent.OnDeniedPermissions(it)) },
+            gratedPermissions = { sendEvent(ScanEvent.OnGrantedPermissions(it)) },
+            notGrantedPermissions = { sendEvent(ScanEvent.OnDeniedPermissions(it)) },
         )
     }
 
     val onAlertBtnClick =
-        { issueType: BluetoothIssueType ->
+        { issueType: AppIssueType ->
             when (issueType) {
-                BluetoothIssueType.BluetoothIsNotEnabled -> {
+                AppIssueType.BluetoothIsNotEnabled -> {
                     val requiredPermissionsToEnableBluetooth =
                         context.getNotGrantedPermissions(getBluetoothPermission().toList())
                     if (requiredPermissionsToEnableBluetooth.isEmpty()) {
@@ -313,11 +319,11 @@ fun LazyIssueContainer(
                     }
                 }
 
-                is BluetoothIssueType.HardwareIssue -> sendEvent(ScanEvent.DismissAlertDialog)
-                is BluetoothIssueType.Permissions -> {
+                is AppIssueType.HardwareIssue -> sendEvent(ScanEvent.DismissAlertDialog)
+                is AppIssueType.Permissions -> {
                     when (issueType.status) { // cause of that we have only one contract for all perm(bluetooth and location) I've decided to do not double code and have written checking in this way
-                        IssuePermissionStatus.NOT_GRANTED -> bluetoothPermissionContract.launch(
-                            getBluetoothPermission()
+                        IssuePermissionStatus.NOT_GRANTED -> permissionContract.launch(
+                            getAllPermissionWhatNeedForProperAppWork()
                         )
 
                         IssuePermissionStatus.DENIED -> {
@@ -332,7 +338,7 @@ fun LazyIssueContainer(
                     sendEvent(ScanEvent.DismissAlertDialog)
                 }
 
-                is BluetoothIssueType.BluetoothScanIssue -> sendEvent(ScanEvent.DismissAlertDialog)
+                is AppIssueType.BluetoothScanIssue -> sendEvent(ScanEvent.DismissAlertDialog)
             }
         }
 
@@ -340,7 +346,7 @@ fun LazyIssueContainer(
         modifier,
         issues,
         onIssueBtnClick = { issue ->
-            val alertDialogData = mapIssueToAlertDialogData(context, issue.type).copy(btnOnClick = {
+            val alertDialogData = mapIssueToAlertDialogData(context, issue.type, btnOnClick = {
                 onAlertBtnClick(issue.type)
             })
             sendEvent(

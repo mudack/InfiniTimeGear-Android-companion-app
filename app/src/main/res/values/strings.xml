@@ -20,6 +20,7 @@
     <string name="issue_title_bluetooth_permission_is_not_granted">Permission for bluetooth is not granted</string>
     <string name="issue_btn_text_provide_permission">Provide Permission</string>
     <string name="issue_title_location_permission_is_not_granted">Location permission</string>
+    <string name="issue_title_notification_permission_is_not_granted">Notification permission</string>
 
     <string name="alert_title_bluetooth_is_not_supported">!Bluetooth!</string>
     <string name="alert_message_bluetooth_is_not_supported">Your device doesn\'t support bluetooth, so you can\'t use this app\nIf there is a mistake please contact us /ContactData/</string>
@@ -32,17 +33,25 @@
     <string name="alert_title_location_permission_is_not_granted">Permission for location is not granted</string>
     <string name="alert_message_location_permission_is_not_granted">This app require location permission to be granted for android 11 and lower so the app is able for bluetooth scanning</string>
 
+    <string name="alert_title_notification_permission_is_not_granted">Permission for notification is not granted</string>
+    <string name="alert_message_notification_permission_is_not_granted">This app require notification permission to be granted for android 8 and higher so the app is able to start background service and keep ble connection</string>
+
     <string name="alert_title_bluetooth_permission_denied">Bluetooth permission denied</string>
     <string name="alert_message_bluetooth_permission_denied">To provide permission press the button open setting and allow permission \"Nearby devices\"</string> <!--todo make new string for android lower then 30-->
     <string name="alert_btn_bluetooth_permission_denied">Open Settings</string>
     <string name="issue_title_bluetooth_permission_denied">Bluetooth permission denied</string>
     <string name="issue_title_location_permission_denied">Location permission denied</string>
+    <string name="issue_title_notification_permission_denied">Notification permission denied</string>
 
     <string name="alert_title_location_permission_denied">Location permission denied</string>
-    <string name="alert_message_location_permission_denied">To provide permission press the button open setting and allow permission \"Location\"</string> <!--todo make new string for android lower then 30-->
+    <string name="alert_message_location_permission_denied">To provide permission press the button open setting and allow permission \"Location\"</string>
+
+    <string name="alert_title_notification_permission_denied">Notification permission denied</string>
+    <string name="alert_message_notification_permission_denied">To provide permission press the button open setting and enable \"Notifications\"</string>
 
     <string name="alert_title_enable_bluetooth_exception">Enable bluetooth error</string>
     <string name="alert_message_enable_bluetooth_exception">To enable bluetooth app Android OS require the app to have Bluetooth permission, please fix it first</string>
+    <string name="text_no_paired_devices">No paired devices</string>
     <string name="text_no_scanned_devices">No scanned devices</string>
     <string name="content_description_scan_button_requires_to_fix_issues">Scan button requires to fix issues to be able to work</string>
     <string name="content_description_scan_button_is_ready_to_start_scanning">Scan button is ready to start scanning</string>
