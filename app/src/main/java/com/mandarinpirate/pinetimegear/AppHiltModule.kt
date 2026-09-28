@@ -6,12 +6,14 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.preferencesDataStoreFile
-import com.mandarinpirate.data.ble.BleScannerRepoImpl
+import com.mandarinpirate.data.local.ble.BleRepoImpl
+import com.mandarinpirate.data.local.ble.BleScannerRepoImpl
 import com.mandarinpirate.data.local.ble.SafeBleScannerImpl
 import com.mandarinpirate.data.local.data_store.preferences_store.PreferencesStoreRepoImpl
 import com.mandarinpirate.data.local.data_store.saved_device.SavedDeviceRepoImpl
 import com.mandarinpirate.data.local.string_provider.StringProvider
 import com.mandarinpirate.data.local.string_provider.StringProviderImpl
+import com.mandarinpirate.domain.repos.BleRepository
 import com.mandarinpirate.domain.repos.BleScannerRepo
 import com.mandarinpirate.domain.repos.PreferencesStoreRepo
 import com.mandarinpirate.domain.repos.SavedDeviceRepo
@@ -31,6 +33,13 @@ object AppHiltModule {
 
     @Provides
     @Singleton
+    fun provideBleRepo(
+        @ApplicationContext context: Context,
+        bluetoothManager: BluetoothManager
+    ): BleRepository = BleRepoImpl(bluetoothManager.adapter, context)
+
+    @Provides
+    @Singleton
     fun provideStringProvider(
         @ApplicationContext context: Context
     ): StringProvider = StringProviderImpl(context)
@@ -46,9 +55,9 @@ object AppHiltModule {
     fun providePreferencesDataStore(
         @ApplicationContext context: Context
     ): DataStore<Preferences> = PreferenceDataStoreFactory.create(
-            corruptionHandler = null,
-            scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-        ) { context.preferencesDataStoreFile(Const.PREFERENCES_DATA_STORE_FILE_NAME) }
+        corruptionHandler = null,
+        scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    ) { context.preferencesDataStoreFile(Const.PREFERENCES_DATA_STORE_FILE_NAME) }
 
     @Provides
     @Singleton
@@ -66,7 +75,7 @@ object AppHiltModule {
     @Singleton
     fun provideBleScannerRepo(
         @ApplicationContext context: Context,
-        bluetoothManager:BluetoothManager
+        bluetoothManager: BluetoothManager
     ): BleScannerRepo = BleScannerRepoImpl(
         SafeBleScannerImpl(
             bluetoothManager = bluetoothManager,

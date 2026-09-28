@@ -12,7 +12,8 @@ data class BluetoothDeviceUi(
         macAddress = this.macAddress
     )
     companion object {
-        fun from(device: BluetoothDevice) = BluetoothDeviceUi(
+        fun getNullObject(): BluetoothDeviceUi = BluetoothDeviceUi("null", "null")
+        fun fromDomain(device: BluetoothDevice) = BluetoothDeviceUi(
             name = device.name,
             macAddress = device.macAddress
         )

@@ -1,4 +1,4 @@
-package com.mandarinpirate.pinetimegear
+package com.mandarinpirate.pinetimegear.service
 
 import android.app.Service
 import android.content.Intent
@@ -9,15 +9,28 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.graphics.drawable.Icon
+import android.os.Binder
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import com.mandarinpirate.pinetimegear.R
 import com.mandarinpirate.pinetimegear.ui.screens._main_activity.MainActivity
 
 
 @AndroidEntryPoint
-class BleForegroundService: Service() {
-    override fun onBind(p0: Intent?): IBinder? = null
+class BleForegroundService : Service() {
+
+    val binder = LocalBinder()
+
+    override fun onBind(intent: Intent): IBinder {
+        return binder
+    }
+
+    inner class LocalBinder : Binder() {
+        fun getService(): BleForegroundService {
+            return this@BleForegroundService
+        }
+    }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         this.startForeground(

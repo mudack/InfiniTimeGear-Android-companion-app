@@ -1,12 +1,17 @@
 package com.mandarinpirate.pinetimegear.ui
 
 import android.Manifest
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothGattCallback
+import android.bluetooth.BluetoothGattConnectionSettings
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.annotation.RequiresPermission
 import androidx.core.content.ContextCompat
 import com.mandarinpirate.pinetimegear.ui.entities.IssuePermissionStatus
 import com.mandarinpirate.pinetimegear.ui.entities.AppIssueType
+import java.util.concurrent.Executor
 
 fun getAllPermissionWhatNeedForProperAppWork(): Array<String> {
     var allRequiredPerm: Array<String> = getBluetoothPermission()

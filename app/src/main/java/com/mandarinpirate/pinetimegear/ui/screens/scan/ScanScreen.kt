@@ -78,7 +78,7 @@ import com.mandarinpirate.pinetimegear.ui.screens.ScreenRoute.OnboardingRoute
 import com.mandarinpirate.pinetimegear.ui.theme.PineTimeGearCompanionAppTheme
 
 @Composable
-fun ScanScreen(navController: NavHostController) {
+fun ScanScreen(openNextScreen: () -> Unit) {
     val viewModel: ScanViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -96,13 +96,7 @@ fun ScanScreen(navController: NavHostController) {
             )
         )
         viewModel.sharedStateOpenNextScreen.collect { shouldOpenNextScreen ->
-            if (shouldOpenNextScreen) {
-                navController.navigate(ScreenRoute.MainMenuRoute) {
-                    popUpTo<OnboardingRoute> {
-                        inclusive = true
-                    }
-                }
-            }
+            if (shouldOpenNextScreen) openNextScreen()
         }
     }
 
@@ -139,7 +133,7 @@ fun ScanScreen(navController: NavHostController) {
 
     PineTimeGearCompanionAppTheme {
 
-        val navController = rememberNavController()
+        val bottomNavController = rememberNavController()
         val startDestination = BottomNavRoutes.PAIRED_DEVICES
         var selectedDestination by rememberSaveable { mutableIntStateOf(startDestination.ordinal) }
         Scaffold( //https://developer.android.com/develop/ui/compose/components/navigation-bar
@@ -167,7 +161,7 @@ fun ScanScreen(navController: NavHostController) {
                 ScanScreenContent(
                     uiState = uiState,
                     sendEvent = viewModel::sendEvent,
-                    navController = navController,
+                    navController = bottomNavController,
                     selectedDestination = selectedDestination
                 )
             }
@@ -187,13 +181,13 @@ fun ScanScreenContent(
     when (BottomNavRoutes.entries[selectedDestination]) {
         BottomNavRoutes.PAIRED_DEVICES -> PairedDevicesContent(
             pairedDevices = uiState.pairedDevices,
-            selectDevice = { sendEvent(ScanEvent.DeviceSelected(it)) }
+            selectDevice = { deviceSelected(it, sendEvent) }
         )
 
         BottomNavRoutes.SCAN_NEW_DEVICES -> ScanNewDeviceContent(
             scannedDevices = uiState.scannedDevices,
             scrollToTheEnd = uiState.scrollToTheEnd,
-            selectDevice = { sendEvent(ScanEvent.DeviceSelected(it)) }
+            selectDevice = { deviceSelected(it, sendEvent) }
         )
     }
 
@@ -202,6 +196,13 @@ fun ScanScreenContent(
             sendEvent(ScanEvent.DismissAlertDialog)
         }
     }
+}
+
+fun deviceSelected(
+    bluetoothDeviceUi: BluetoothDeviceUi,
+    sendEvent: (ScanEvent) -> Unit = {}
+){
+    sendEvent(ScanEvent.DeviceSelected(bluetoothDeviceUi))
 }
 
 @Composable

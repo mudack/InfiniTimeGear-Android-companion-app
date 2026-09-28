@@ -28,6 +28,7 @@ import com.mandarinpirate.pinetimegear.ui.screens.scan.ScanScreen
 import com.mandarinpirate.pinetimegear.ui.theme.PineTimeGearCompanionAppTheme
 import dagger.hilt.android.AndroidEntryPoint
 import com.mandarinpirate.pinetimegear.ui.screens.ScreenRoute.*
+import com.mandarinpirate.pinetimegear.ui.screens.device_control.DeviceControlScreen
 import com.mandarinpirate.pinetimegear.ui.screens.onboarding.OnboardingScreen
 
 @AndroidEntryPoint
@@ -36,9 +37,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            PineTimeGearCompanionAppTheme {
-                NavGraph()
-            }
+            NavGraph()
         }
     }
 }
@@ -79,15 +78,21 @@ private fun NavGraph(
         }
 
         composable<ScanRoute> {
-            ScanScreen(navController)
+            ScanScreen(openNextScreen = {
+                navController.navigate(DeviceControlRoute) {
+                    popUpTo<ScanRoute> {
+                        inclusive = true
+                    }
+                }
+            })
         }
 
-        composable<MainMenuRoute> {
-            MainMenuPlaceholder(
-                onWorkingHoursClick = {
+        composable<DeviceControlRoute> {
+            DeviceControlScreen(
+                onWorkingHours = {
                     navController.navigate(WorkingHoursRoute)
                 },
-                onChooseDeviceClick = {
+                onChooseAnotherDevice = {
                     navController.navigate(ScanRoute)
                 }
             )
@@ -104,7 +109,7 @@ private fun NavGraph(
 private val MainActivityStartDestination.route: ScreenRoute
     get() = when (this) {
         MainActivityStartDestination.ONBOARDING -> OnboardingRoute
-        MainActivityStartDestination.MAIN_MENU -> MainMenuRoute
+        MainActivityStartDestination.MAIN_MENU -> DeviceControlRoute
         MainActivityStartDestination.SCAN_DEVICE_MISSING -> ScanRoute
     }
 

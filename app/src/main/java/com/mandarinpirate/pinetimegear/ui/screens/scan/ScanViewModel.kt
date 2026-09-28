@@ -198,7 +198,7 @@ class ScanViewModel @Inject constructor(
             }
 
             is ScanEvent.OnScanResult -> {
-                val device = BluetoothDeviceUi.from(event.scannedDevice)
+                val device = BluetoothDeviceUi.fromDomain(event.scannedDevice)
                 _uiState.update {
                     it.copy(scannedDevices = it.scannedDevices + device)
                 }
@@ -214,34 +214,22 @@ class ScanViewModel @Inject constructor(
             }
 
             is ScanEvent.DeviceSelected -> {
-                val blAdapter = bluetoothManager.adapter
                 val isValid = BluetoothAdapter.checkBluetoothAddress(event.device.macAddress)
                 if (isValid) {
-                    _uiState.update {
-                        it.copy(
-                            alertDialogData = AlertDialogData(
-                                "Success",
-                                message = "The ${event.device.name} is valid! Congrats!!!",
-                                "ok",
-                                btnOnClick = { _uiState.update { it.copy(alertDialogData = null) } })
-                        )
+                    viewModelScope.launch(Dispatchers.IO) {
+                        savedDeviceRepo.saveDevice(event.device.toDomainBluetoothDevice())
+                        _sharedStateOpenNextScreen.emit(true)
                     }
-//                    val device = blAdapter.getRemoteDevice(event.device.macAddress) // todo send this device object to new ForegroundService
-////                    device.connectGatt(bzzluetoothGattConnectionSettings)
-//                    viewModelScope.launch(Dispatchers.IO) {
-//                        savedDeviceRepo.saveDevice(event.device.toDomainBluetoothDevice())
-//                        _sharedStateOpenNextScreen.emit(true)
-//                    }
                 } else {
-                    _uiState.update {
+                    _uiState.update { it ->
                         it.copy(
                             alertDialogData = AlertDialogData(
-                                "Invalid mac addr device",
+                                "Invalid mac addr device", //todo fix hardcode
                                 message = "Try again",
                                 "ok",
                                 btnOnClick = { _uiState.update { it.copy(alertDialogData = null) } })
                         )
-                    } //todo better replace with res
+                    }
                 }
             }
         }

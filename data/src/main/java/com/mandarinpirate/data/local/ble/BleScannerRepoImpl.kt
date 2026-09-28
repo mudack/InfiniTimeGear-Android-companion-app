@@ -1,9 +1,9 @@
-package com.mandarinpirate.data.ble
+package com.mandarinpirate.data.local.ble
 
-import com.mandarinpirate.domain.models.BluetoothDevice
-import com.mandarinpirate.domain.ScanStatus
 import com.mandarinpirate.domain.BleScanner
+import com.mandarinpirate.domain.ScanStatus
 import com.mandarinpirate.domain.models.BleScanFilter
+import com.mandarinpirate.domain.models.BluetoothDevice
 import com.mandarinpirate.domain.repos.BleScannerRepo
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow

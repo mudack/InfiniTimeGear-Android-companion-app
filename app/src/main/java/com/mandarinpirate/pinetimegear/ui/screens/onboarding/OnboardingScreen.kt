@@ -20,8 +20,6 @@ import com.mandarinpirate.pinetimegear.ui.theme.PineTimeGearCompanionAppTheme
 
 @Composable
 fun OnboardingScreen(onFinished: () -> Unit) {
-
-
     PineTimeGearCompanionAppTheme {
         Scaffold(
             modifier = Modifier.fillMaxSize(),

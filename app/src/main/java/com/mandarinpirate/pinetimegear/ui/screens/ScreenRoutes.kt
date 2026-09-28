@@ -11,7 +11,7 @@ sealed interface ScreenRoute {
     data object ScanRoute : ScreenRoute
 
     @Serializable
-    data object MainMenuRoute : ScreenRoute
+    data object DeviceControlRoute : ScreenRoute
 
     @Serializable
     data object WorkingHoursRoute : ScreenRoute

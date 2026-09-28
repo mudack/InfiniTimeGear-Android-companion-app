@@ -53,7 +53,7 @@
         </activity>
 
         <service
-            android:name=".BleForegroundService"
+            android:name=".service.BleForegroundService"
             android:foregroundServiceType="connectedDevice"
             android:exported="false">
         </service>
