@@ -121,7 +121,7 @@ class ScanViewModel @Inject constructor(
                     }
                 } else {
                     if (uiState.value.issues.contains(AppIssueType.BluetoothIsNotEnabled)) {
-                        newIssues.minusElement(AppIssueType.BluetoothIsNotEnabled)
+                        newIssues.remove(AppIssueType.BluetoothIsNotEnabled)
                         _uiState.update {
                             it.copy(
                                 issues = newIssues,

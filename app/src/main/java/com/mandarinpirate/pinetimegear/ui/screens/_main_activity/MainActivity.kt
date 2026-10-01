@@ -114,26 +114,6 @@ private val MainActivityStartDestination.route: ScreenRoute
     }
 
 @Composable
-private fun MainMenuPlaceholder(
-    onWorkingHoursClick: () -> Unit,
-    onChooseDeviceClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(stringResource(R.string.main_menu_title))
-        Button(onClick = onWorkingHoursClick) {
-            Text(stringResource(R.string.main_menu_working_hours_button))
-        }
-        Button(onClick = onChooseDeviceClick) {
-            Text(stringResource(R.string.main_menu_select_another_device_button))
-        }
-    }
-}
-
-@Composable
 private fun WorkingHoursPlaceholder(onBackClick: () -> Unit) {
     PlaceholderScreen(
         title = stringResource(R.string.working_hours_title),

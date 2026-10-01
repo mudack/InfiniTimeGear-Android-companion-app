@@ -1,5 +1,9 @@
 package com.mandarinpirate.pinetimegear.ui.screens.device_control
 
+import android.bluetooth.BluetoothAdapter
+import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,6 +31,9 @@ import com.mandarinpirate.pinetimegear.ui.theme.PineTimeGearCompanionAppTheme
 fun DeviceControlScreen(onWorkingHours: () -> Unit, onChooseAnotherDevice: () -> Unit) {
     val viewModel: DeviceControlViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val enableBluetoothLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {}
 
     PineTimeGearCompanionAppTheme {
         Scaffold(
@@ -35,7 +42,10 @@ fun DeviceControlScreen(onWorkingHours: () -> Unit, onChooseAnotherDevice: () ->
             DeviceControlContent(
                 Modifier.padding(innerPadding),
                 uiState = uiState,
-                sendEvent = viewModel::sendEvent
+                sendEvent = viewModel::sendEvent,
+                enableBluetooth = {
+                    enableBluetoothLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
+                }
             )
         }
     }
@@ -45,25 +55,27 @@ fun DeviceControlScreen(onWorkingHours: () -> Unit, onChooseAnotherDevice: () ->
 fun DeviceControlContent(
     modifier: Modifier,
     uiState: DeviceControlState,
-    sendEvent: (DeviceControlEvent) -> Unit
+    sendEvent: (DeviceControlEvent) -> Unit,
+    enableBluetooth: () -> Unit
 ) {
+    // TODO: Move temporary UI strings to string resources.
     Column(modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         Text("Device")
         Text("name: " + uiState.device.name)
         Text("mac addr: " + uiState.device.macAddress)
         Button(onClick = {
-            if (uiState.connection == ConnectionState.DISCONNECTED) {
-                sendEvent(DeviceControlEvent.TryToConnect)
-            } else if (uiState.connection == ConnectionState.CONNECTED) {
-                sendEvent(DeviceControlEvent.TryToDisconnect)
+            when (uiState.connection) {
+                ConnectionState.DISCONNECTED -> sendEvent(DeviceControlEvent.TryToConnect)
+                ConnectionState.WAITING_FOR_BLUETOOTH -> enableBluetooth()
+                else -> sendEvent(DeviceControlEvent.TryToDisconnect)
             }
         }) {
             when (uiState.connection) {
                 ConnectionState.CONNECTED -> ConnectedContent()
                 ConnectionState.DISCONNECTED -> DisconnectedContent()
                 ConnectionState.CONNECTING -> ConnectingContent()
-                ConnectionState.UNDEFINED -> UndefinedContent()
-                ConnectionState.DISCONNECTING -> DisconnectingContent()
+                ConnectionState.WAITING_FOR_BLUETOOTH -> WaitingForBluetoothContent()
+                ConnectionState.RECONNECTING -> ReconnectingContent()
             }
         }
         Text(uiState.gattLog)
@@ -99,11 +111,11 @@ fun ConnectingContent() {
 }
 
 @Composable
-fun DisconnectingContent() {
-    Text("Disconnecting...")
+fun ReconnectingContent() {
+    Text("Reconnecting...")
 }
 
 @Composable
-fun UndefinedContent() {
-    Text("Undefined")
+fun WaitingForBluetoothContent() {
+    Text(stringResource(R.string.device_control_enable_bluetooth))
 }

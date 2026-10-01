@@ -23,7 +23,6 @@ class SavedDeviceRepoImpl(
         }
 
     override suspend fun saveDevice(device: BluetoothDevice) {
-        clearSavedDevice()
         preferencesDataStore.edit { preferences ->
             preferences[KEY_NAME] = device.name
             preferences[KEY_ADDRESS] = device.macAddress

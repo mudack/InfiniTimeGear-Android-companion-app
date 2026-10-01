@@ -10,7 +10,6 @@ import android.content.Context
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresPermission
-import com.mandarinpirate.data.local.ble.BleRepoImpl.Companion.TAG
 import java.util.concurrent.Executor
 
 
@@ -37,6 +36,6 @@ fun BluetoothDevice.utilConnectGatt(
         )
     } else {
         @Suppress("DEPRECATION")
-        this.connectGatt(context, true, bluetoothGattCallback)
+        this.connectGatt(context, autoConnect, bluetoothGattCallback)
     }
 }

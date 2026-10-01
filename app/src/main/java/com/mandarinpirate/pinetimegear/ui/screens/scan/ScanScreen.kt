@@ -40,9 +40,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -54,7 +51,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavDestination
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.mandarinpirate.pinetimegear.Const.BLUETOOTH_ICON_PAINTER_RES
 import com.mandarinpirate.pinetimegear.Const.ISSUE_ICON_PAINTER_RES
@@ -73,8 +75,6 @@ import com.mandarinpirate.pinetimegear.ui.entities.IssuePermissionStatus
 import com.mandarinpirate.pinetimegear.ui.getAllPermissionWhatNeedForProperAppWork
 import com.mandarinpirate.pinetimegear.ui.getBluetoothPermission
 import com.mandarinpirate.pinetimegear.ui.getNotGrantedPermissions
-import com.mandarinpirate.pinetimegear.ui.screens.ScreenRoute
-import com.mandarinpirate.pinetimegear.ui.screens.ScreenRoute.OnboardingRoute
 import com.mandarinpirate.pinetimegear.ui.theme.PineTimeGearCompanionAppTheme
 
 @Composable
@@ -134,12 +134,12 @@ fun ScanScreen(openNextScreen: () -> Unit) {
     PineTimeGearCompanionAppTheme {
 
         val bottomNavController = rememberNavController()
-        val startDestination = BottomNavRoutes.PAIRED_DEVICES
-        var selectedDestination by rememberSaveable { mutableIntStateOf(startDestination.ordinal) }
+        val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
+        val currentDestination = navBackStackEntry?.destination
         Scaffold( //https://developer.android.com/develop/ui/compose/components/navigation-bar
             modifier = Modifier.fillMaxSize(),
             floatingActionButton = {
-                if (selectedDestination == BottomNavRoutes.SCAN_NEW_DEVICES.ordinal) {
+                if (currentDestination?.hasRoute<BottomNavRoute.ScanNewDevicesRoute>() == true) {
                     ScanFAB(
                         isChipSelected = uiState.scrollToTheEnd,
                         fabState = uiState.fabState,
@@ -149,60 +149,82 @@ fun ScanScreen(openNextScreen: () -> Unit) {
             },
             bottomBar = {
                 BottomNavBar(
-                    selectedDestination,
-                    { newDestinationIndex: Int -> selectedDestination = newDestinationIndex })
+                    currentDestination = currentDestination,
+                    selectNewDestination = { destination ->
+                        bottomNavController.navigateTo(destination)
+                    }
+                )
             }
         ) { innerPadding ->
-            Column(Modifier.padding(innerPadding)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
                 if (uiState.issues.isNotEmpty()) {
                     val issues = uiState.issues.map { mapIssueTypeToIssueMessageUI(it) }
                     LazyIssueContainer(issues = issues, sendEvent = viewModel::sendEvent)
                 }
-                ScanScreenContent(
-                    uiState = uiState,
-                    sendEvent = viewModel::sendEvent,
+
+                NavHost(
                     navController = bottomNavController,
-                    selectedDestination = selectedDestination
-                )
+                    startDestination = BottomNavRoute.PairedDevicesRoute,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    composable<BottomNavRoute.PairedDevicesRoute> {
+                        PairedDevicesContent(
+                            pairedDevices = uiState.pairedDevices,
+                            selectDevice = { deviceSelected(it, viewModel::sendEvent) }
+                        )
+                    }
+                    composable<BottomNavRoute.ScanNewDevicesRoute> {
+                        ScanNewDeviceContent(
+                            scannedDevices = uiState.scannedDevices,
+                            scrollToTheEnd = uiState.scrollToTheEnd,
+                            selectDevice = { deviceSelected(it, viewModel::sendEvent) }
+                        )
+                    }
+                }
+
+                uiState.alertDialogData?.let { alertDialogData ->
+                    IssueAlertDialog(
+                        alertDialogData = alertDialogData,
+                        onDismissRequest = {
+                            viewModel.sendEvent(ScanEvent.DismissAlertDialog)
+                        }
+                    )
+                }
             }
         }
     }
 }
 
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ScanScreenContent(
-    uiState: ScanState = ScanState(),
-    sendEvent: (ScanEvent) -> Unit = {},
-    navController: NavHostController,
-    selectedDestination: Int
-) {
-    when (BottomNavRoutes.entries[selectedDestination]) {
-        BottomNavRoutes.PAIRED_DEVICES -> PairedDevicesContent(
-            pairedDevices = uiState.pairedDevices,
-            selectDevice = { deviceSelected(it, sendEvent) }
-        )
-
-        BottomNavRoutes.SCAN_NEW_DEVICES -> ScanNewDeviceContent(
-            scannedDevices = uiState.scannedDevices,
-            scrollToTheEnd = uiState.scrollToTheEnd,
-            selectDevice = { deviceSelected(it, sendEvent) }
-        )
-    }
-
-    if (uiState.alertDialogData != null) {
-        IssueAlertDialog(alertDialogData = uiState.alertDialogData) {
-            sendEvent(ScanEvent.DismissAlertDialog)
-        }
-    }
-}
 
 fun deviceSelected(
     bluetoothDeviceUi: BluetoothDeviceUi,
     sendEvent: (ScanEvent) -> Unit = {}
 ){
     sendEvent(ScanEvent.DeviceSelected(bluetoothDeviceUi))
+}
+
+private fun NavHostController.navigateTo(destination: BottomNavRoutes) {
+    when (destination) {
+        BottomNavRoutes.PAIRED_DEVICES -> navigate(BottomNavRoute.PairedDevicesRoute) {
+            launchSingleTop = true
+            restoreState = true
+            popUpTo(graph.startDestinationId) {
+                saveState = true
+            }
+        }
+
+        BottomNavRoutes.SCAN_NEW_DEVICES -> navigate(BottomNavRoute.ScanNewDevicesRoute) {
+            launchSingleTop = true
+            restoreState = true
+            popUpTo(graph.startDestinationId) {
+                saveState = true
+            }
+        }
+    }
 }
 
 @Composable
@@ -462,16 +484,14 @@ fun ScanFAB(
 
 @Composable
 fun BottomNavBar(
-    selectedDestination: Int,
-    selectNewDestination: (Int) -> Unit
+    currentDestination: NavDestination?,
+    selectNewDestination: (BottomNavRoutes) -> Unit
 ) {
     NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) {
-        BottomNavRoutes.entries.forEachIndexed { index, destination ->
+        BottomNavRoutes.entries.forEach { destination ->
             NavigationBarItem(
-                selected = selectedDestination == index,
-                onClick = {
-                    selectNewDestination(index)
-                },
+                selected = currentDestination?.hasRoute(destination.routeClass) == true,
+                onClick = { selectNewDestination(destination) },
                 icon = {
                     Icon(
                         imageVector = ImageVector.vectorResource(destination.icon),
