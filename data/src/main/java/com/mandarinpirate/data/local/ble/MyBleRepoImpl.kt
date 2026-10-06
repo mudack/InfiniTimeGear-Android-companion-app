@@ -84,14 +84,14 @@ class MyBleRepoImpl(  //todo check all edge cases and consider right behavior ev
             connectionMutex.withLock {
                 activeDevice = device
                 this@MyBleRepoImpl.reconnectEnabled = reconnectEnabled
-                registerBluetoothStateReceiverLocked()
-                connectToActiveDevice()
             }
+            registerBluetoothStateReceiverLocked()
+            connectToActiveDeviceLocked()
         }
     }
 
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
-    private suspend fun connectToActiveDevice() {
+    private suspend fun connectToActiveDeviceLocked() {
         val device = connectionMutex.withLock {
             activeDevice
                 ?: throw IllegalStateException("activeDevice cannot be null here")
@@ -219,7 +219,7 @@ class MyBleRepoImpl(  //todo check all edge cases and consider right behavior ev
         val shouldReconnect = connectionMutex.withLock {
             activeDevice != null && reconnectEnabled
         }
-        if (shouldReconnect) connectToActiveDevice()
+        if (shouldReconnect) connectToActiveDeviceLocked()
     }
 
 
