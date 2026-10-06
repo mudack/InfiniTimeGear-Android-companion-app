@@ -22,8 +22,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import android.bluetooth.BluetoothDevice
+import android.content.BroadcastReceiver
+import android.content.Intent
+import android.content.IntentFilter
+import androidx.core.content.ContextCompat
 
-class MyBleRepoImpl(
+class MyBleRepoImpl(  //todo check all edge cases and consider right behavior every place where throws are
     private val bluetoothAdapter: BluetoothAdapter,
     private val context: Context
 ) : BleRepository {
@@ -38,10 +42,12 @@ class MyBleRepoImpl(
     override val connectionState: StateFlow<BleConnectionState> = _connectionState.asStateFlow()
 
     private val connectionScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val connectionMutex = Mutex()
+
     private var activeDevice: DBluetoothDevice? = null
     private var currentGatt: BluetoothGatt? = null
+    private var reconnectEnabled = false
 
-    private val connectionMutex = Mutex()
 
     private val bluetoothGattCallback = object : BluetoothGattCallback() {
         @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
@@ -53,70 +59,91 @@ class MyBleRepoImpl(
         }
     }
 
+    private var isBluetoothStateReceiverRegistered: Boolean = false
+    private val bluetoothStateReceiver = object : BroadcastReceiver() {
+        @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action != BluetoothAdapter.ACTION_STATE_CHANGED) return
+
+            when (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)) {
+                BluetoothAdapter.STATE_TURNING_OFF,
+                BluetoothAdapter.STATE_OFF,
+                BluetoothAdapter.STATE_TURNING_ON -> onBluetoothUnavailable()
+
+                BluetoothAdapter.STATE_ON -> onBluetoothEnabled()
+            }
+        }
+    }
+
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     override fun connect(
         device: DBluetoothDevice,
         reconnectEnabled: Boolean
     ) {
         connectionScope.launch {
-            activeDevice = device
-            val remoteDevice = getRemoteDevice(BleConnectionState.Connecting)
-                ?: throw IllegalStateException("remoteDevice cannot be null")
-
-            val gatt = runCatching {
-                remoteDevice.utilConnectGatt(
-                    context = context,
-                    autoConnect = false,
-                    bluetoothGattCallback = bluetoothGattCallback
-                )
-            }.getOrElse {
-                Log.e(TAG, "Unable to start the GATT connection", it)
-//            scheduleReconnect()
-                return@launch
-            }
-
             connectionMutex.withLock {
-                if (activeDevice?.macAddress != remoteDevice.address) {
-                    gatt?.close()
-                    return@launch
-                }
-                currentGatt = gatt
+                activeDevice = device
+                this@MyBleRepoImpl.reconnectEnabled = reconnectEnabled
+                registerBluetoothStateReceiverLocked()
+                connectToActiveDevice()
             }
         }
     }
 
-    private suspend fun getRemoteDevice(processingState: BleConnectionState): BluetoothDevice? {
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+    private suspend fun connectToActiveDevice() {
         val device = connectionMutex.withLock {
             activeDevice
-                ?: return null
+                ?: throw IllegalStateException("activeDevice cannot be null here")
         }
 
         if (!bluetoothAdapter.isEnabled) {
             _connectionState.value = BleConnectionState.WaitingForBluetooth
-            throw IllegalStateException("In this app version bluetooth always should be turned on")//TODO impl bluetooth state checking
+            throw IllegalStateException("Bluetooth is disabled enable it please")
         }
 
-        _connectionState.value = processingState
+        _connectionState.value = BleConnectionState.Connecting
 
         val remoteDevice: BluetoothDevice = runCatching {
             bluetoothAdapter.getRemoteDevice(device.macAddress)
         }.getOrElse {
             Log.e(TAG, "Unable to resolve the Bluetooth device", it)
-//            scheduleReconnect()
-            return null
+            throw it
         }
 
         val currentActiveDevice = connectionMutex.withLock { activeDevice }
 
-        if (device == currentActiveDevice) return remoteDevice
-        else throw IllegalStateException("race condition $device != $currentActiveDevice ")
+        if (device !== currentActiveDevice) throw IllegalStateException("race condition $device != $currentActiveDevice ")
+
+        val gatt = runCatching {
+            remoteDevice.utilConnectGatt(
+                context = context,
+                autoConnect = false,
+                bluetoothGattCallback = bluetoothGattCallback
+            )
+        }.getOrElse {
+            Log.e(TAG, "Unable to start the GATT connection", it)
+            throw it
+        }
+
+        connectionMutex.withLock {
+            if (activeDevice?.macAddress != remoteDevice.address) {
+                gatt?.close()
+                throw IllegalStateException("addresses of remote device and active device are not the same, race condition")
+            }
+            currentGatt = gatt
+        }
     }
+
 
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     override fun disconnect() {
         connectionScope.launch {
             connectionMutex.withLock {
+                activeDevice = null
+                reconnectEnabled = false
                 closeCurrentGattLocked()
+                unregisterBluetoothStateReceiverLocked()
             }
             _connectionState.value = BleConnectionState.Disconnected
         }
@@ -133,32 +160,68 @@ class MyBleRepoImpl(
     }
 
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
-    private fun onConnected(gatt: BluetoothGatt) {
-        connectionScope.launch {
-            connectionMutex.withLock {
-                if (gatt != currentGatt) {
-                    closeCurrentGattLocked()
-                }
-                currentGatt = gatt
+    private fun onConnected(gatt: BluetoothGatt) = connectionScope.launch {
+        connectionMutex.withLock {
+            if (gatt != currentGatt) {
+                closeCurrentGattLocked()
             }
-            _connectionState.value = BleConnectionState.Connected
+            currentGatt = gatt
         }
+        _connectionState.value = BleConnectionState.Connected
+
     }
 
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
-    private fun onDisconnected(gatt: BluetoothGatt, status: Int) {
-        connectionScope.launch {
-            connectionMutex.withLock {
-                if (gatt === currentGatt) {
-                    currentGatt = null
-                }
+    private fun onDisconnected(gatt: BluetoothGatt, status: Int) = connectionScope.launch {
+        connectionMutex.withLock {
+            if (gatt === currentGatt) {
+                currentGatt = null
             }
-            gatt.close()
+        }
+        gatt.close()
 
-            _connectionState.value = BleConnectionState.Disconnected
-            //in the future i could parse status and show it in state
+        _connectionState.value = BleConnectionState.Disconnected
+        //in the future i could parse status and show it in the state
+    }
+
+
+    private fun registerBluetoothStateReceiverLocked() {
+        if (isBluetoothStateReceiverRegistered) return
+
+        ContextCompat.registerReceiver(
+            context,
+            bluetoothStateReceiver,
+            IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED),
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
+        isBluetoothStateReceiverRegistered = true
+    }
+
+    private fun unregisterBluetoothStateReceiverLocked() {
+        if (!isBluetoothStateReceiverRegistered) return
+
+        context.unregisterReceiver(bluetoothStateReceiver)
+        isBluetoothStateReceiverRegistered = false
+    }
+
+    @androidx.annotation.RequiresPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
+    private fun onBluetoothUnavailable() = connectionScope.launch {
+        connectionMutex.withLock {
+            if (activeDevice == null) return@launch
+
+            closeCurrentGattLocked()
+            _connectionState.value = BleConnectionState.WaitingForBluetooth
         }
     }
+
+    @androidx.annotation.RequiresPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
+    private fun onBluetoothEnabled() = connectionScope.launch {
+        val shouldReconnect = connectionMutex.withLock {
+            activeDevice != null && reconnectEnabled
+        }
+        if (shouldReconnect) connectToActiveDevice()
+    }
+
 
     companion object {
         const val TAG = "MyBleRepoImpl"
