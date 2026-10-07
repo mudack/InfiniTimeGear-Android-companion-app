@@ -6,7 +6,9 @@
     <string name="ble_notification_connecting">Connecting to device</string>
     <string name="ble_notification_disconnected">Device disconnected</string>
     <string name="ble_notification_waiting_for_bluetooth">Waiting for Bluetooth to be enabled</string>
-    <string name="ble_notification_reconnecting">Reconnecting to device, attempt %1$d</string>
+    <string name="ble_notification_reconnecting">Reconnecting to device…</string>
+    <string name="ble_notification_cant_resolve_the_device">Can\'t resolve the device</string>
+    <string name="ble_notification_unable_to_start_gatt_connection">Unable to start GATT connection</string>
     <string name="device_control_enable_bluetooth">Enable Bluetooth</string>
 
     <string name="fab_icon_onboarding_next_description">This is FAB button what opens scan screen</string>

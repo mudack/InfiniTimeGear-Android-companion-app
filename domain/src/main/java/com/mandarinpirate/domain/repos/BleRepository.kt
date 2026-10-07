@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
 interface BleRepository {
     val connectionState: StateFlow<BleConnectionState>
 
-    fun connect(device: BluetoothDevice, reconnectEnabled: Boolean)
+    suspend fun connect(device: BluetoothDevice, reconnectEnabled: Boolean)
 
-    fun disconnect()
+    suspend fun disconnect()
 }

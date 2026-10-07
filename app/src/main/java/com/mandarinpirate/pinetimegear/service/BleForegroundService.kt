@@ -34,6 +34,7 @@ class BleForegroundService : Service() {
     lateinit var bleRepository: BleRepository
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private val bleScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var isForegroundStarted = false
 
     override fun onCreate() {
@@ -66,7 +67,7 @@ class BleForegroundService : Service() {
             foregroundServiceTypeFlags
         )
         isForegroundStarted = true
-        bleRepository.connect(device, reconnectEnabled = true)
+        bleScope.launch { bleRepository.connect(device, reconnectEnabled = true) }
 
         return START_NOT_STICKY
     }
@@ -74,9 +75,12 @@ class BleForegroundService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
+        bleScope.launch {
+            bleRepository.disconnect()
+            bleScope.cancel()
+        }
         isForegroundStarted = false
         serviceScope.cancel()
-        bleRepository.disconnect()
         super.onDestroy()
     }
 
@@ -119,8 +123,14 @@ class BleForegroundService : Service() {
             getString(R.string.ble_notification_waiting_for_bluetooth)
         }
         is BleConnectionState.Reconnecting -> {
-            getString(R.string.ble_notification_reconnecting, attempt)
+            getString(R.string.ble_notification_reconnecting)
         }
+
+        BleConnectionState.CantResolveTheDevice ->
+            getString(R.string.ble_notification_cant_resolve_the_device)
+        BleConnectionState.UnableToStartGattConnection ->
+            getString(R.string.ble_notification_unable_to_start_gatt_connection)
+        is BleConnectionState.UndefinedBehavior -> this.message //todo <release> replace with abstract error or consult with designer how to do it better
     }
 
     private fun createNotificationChannel() {

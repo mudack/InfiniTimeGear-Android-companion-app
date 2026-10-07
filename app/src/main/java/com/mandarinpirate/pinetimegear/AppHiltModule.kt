@@ -3,12 +3,12 @@ package com.mandarinpirate.pinetimegear
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.mandarinpirate.data.local.ble.BleScannerRepoImpl
-import com.mandarinpirate.data.local.ble.MyBleRepoImpl
 import com.mandarinpirate.data.local.ble.SafeBleScannerImpl
+import com.mandarinpirate.data.local.ble.repo.SingleDeviceBleRepoImpl
 import com.mandarinpirate.data.local.data_store.preferences_store.PreferencesStoreRepoImpl
 import com.mandarinpirate.data.local.data_store.saved_device.SavedDeviceRepoImpl
 import com.mandarinpirate.data.local.string_provider.StringProvider
@@ -38,7 +38,7 @@ object AppHiltModule {
     fun provideBleRepo(
         @ApplicationContext context: Context,
         bluetoothManager: BluetoothManager
-    ): BleRepository = MyBleRepoImpl(bluetoothManager.adapter, context)
+    ): BleRepository = SingleDeviceBleRepoImpl(bluetoothManager.adapter, context)
 
     @Provides
     @Singleton

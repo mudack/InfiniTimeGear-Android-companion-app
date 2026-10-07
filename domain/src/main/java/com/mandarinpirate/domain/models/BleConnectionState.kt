@@ -5,5 +5,8 @@ sealed interface BleConnectionState {
     data object Connecting : BleConnectionState
     data object Connected : BleConnectionState
     data object WaitingForBluetooth : BleConnectionState
-    data class Reconnecting(val attempt: Int) : BleConnectionState
+    data object Reconnecting : BleConnectionState
+    data object CantResolveTheDevice: BleConnectionState
+    data object UnableToStartGattConnection: BleConnectionState
+    data class UndefinedBehavior(val message: String) : BleConnectionState
 }
