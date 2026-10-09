@@ -4,7 +4,7 @@ import com.mandarinpirate.domain.models.BleConnectionState
 import com.mandarinpirate.domain.models.BluetoothDevice
 import kotlinx.coroutines.flow.StateFlow
 
-interface BleRepository {
+interface BleConnectionController {
     val connectionState: StateFlow<BleConnectionState>
 
     suspend fun connect(device: BluetoothDevice, reconnectEnabled: Boolean)

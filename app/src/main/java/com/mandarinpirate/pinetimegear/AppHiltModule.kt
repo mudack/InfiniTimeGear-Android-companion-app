@@ -6,18 +6,15 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
-import com.mandarinpirate.data.local.ble.BleScannerRepoImpl
-import com.mandarinpirate.data.local.ble.SafeBleScannerImpl
-import com.mandarinpirate.data.local.ble.repo.SingleDeviceBleRepoImpl
-import com.mandarinpirate.data.local.data_store.preferences_store.PreferencesStoreRepoImpl
-import com.mandarinpirate.data.local.data_store.saved_device.SavedDeviceRepoImpl
+import com.mandarinpirate.data.local.ble.controllers.connection.SingleDeviceBleConnectionController
+import com.mandarinpirate.data.local.ble.controllers.scan.SafeBleScanControllerImpl
+import com.mandarinpirate.data.local.data_store.BleScanDataSourceImpl
+import com.mandarinpirate.data.local.data_store.PreferencesStoreRepoImpl
 import com.mandarinpirate.data.local.string_provider.StringProvider
 import com.mandarinpirate.data.local.string_provider.StringProviderImpl
 import com.mandarinpirate.domain.BleServiceManager
-import com.mandarinpirate.domain.repos.BleRepository
-import com.mandarinpirate.domain.repos.BleScannerRepo
+import com.mandarinpirate.domain.repos.BleConnectionController
 import com.mandarinpirate.domain.repos.PreferencesStoreRepo
-import com.mandarinpirate.domain.repos.SavedDeviceRepo
 import com.mandarinpirate.pinetimegear.service.BleServiceManagerImpl
 import dagger.Module
 import dagger.Provides
@@ -38,7 +35,7 @@ object AppHiltModule {
     fun provideBleRepo(
         @ApplicationContext context: Context,
         bluetoothManager: BluetoothManager
-    ): BleRepository = SingleDeviceBleRepoImpl(bluetoothManager.adapter, context)
+    ): BleConnectionController = SingleDeviceBleConnectionController(bluetoothManager.adapter, context)
 
     @Provides
     @Singleton
@@ -75,17 +72,11 @@ object AppHiltModule {
 
     @Provides
     @Singleton
-    fun provideSavedDeviceRepo(
-        dataStore: DataStore<Preferences>
-    ): SavedDeviceRepo = SavedDeviceRepoImpl(dataStore)
-
-    @Provides
-    @Singleton
     fun provideBleScannerRepo(
         @ApplicationContext context: Context,
         bluetoothManager: BluetoothManager
-    ): BleScannerRepo = BleScannerRepoImpl(
-        SafeBleScannerImpl(
+    ): com.mandarinpirate.domain.repos.BleScanDataSource = BleScanDataSourceImpl(
+        SafeBleScanControllerImpl(
             bluetoothManager = bluetoothManager,
             context = context
         )

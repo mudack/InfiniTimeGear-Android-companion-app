@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mandarinpirate.domain.BleServiceManager
 import com.mandarinpirate.domain.models.BluetoothDevice
-import com.mandarinpirate.domain.repos.BleRepository
-import com.mandarinpirate.domain.repos.SavedDeviceRepo
+import com.mandarinpirate.domain.repos.BleConnectionController
+import com.mandarinpirate.domain.repos.PreferencesStoreRepo
 import com.mandarinpirate.pinetimegear.ui.entities.BluetoothDeviceUi
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
@@ -14,14 +14,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel
 class DeviceControlViewModel @Inject constructor(
-    private val savedDeviceRepo: SavedDeviceRepo,
-    private val bleRepo: BleRepository,
+    private val preferencesStoreRepo: PreferencesStoreRepo,
+    private val bleRepo: BleConnectionController,
     private val bleServiceManager: BleServiceManager
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(DeviceControlState())
@@ -30,7 +29,7 @@ class DeviceControlViewModel @Inject constructor(
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
-            val device: BluetoothDevice = savedDeviceRepo.observeSavedDevice().first()
+            val device: BluetoothDevice = preferencesStoreRepo.getSavedDevice()
                 ?: throw NullPointerException("The collecting device cannot be null ")
             _uiState.update { it.copy(device = BluetoothDeviceUi.fromDomain(device)) }
         }

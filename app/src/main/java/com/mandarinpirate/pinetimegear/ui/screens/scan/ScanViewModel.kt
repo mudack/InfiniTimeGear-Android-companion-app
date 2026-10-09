@@ -7,13 +7,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mandarinpirate.domain.ScanStatus
 import com.mandarinpirate.domain.models.BleScanFilter
-import com.mandarinpirate.domain.repos.BleScannerRepo
-import com.mandarinpirate.domain.repos.SavedDeviceRepo
+import com.mandarinpirate.domain.repos.BleScanDataSource
+import com.mandarinpirate.domain.repos.PreferencesStoreRepo
 import com.mandarinpirate.pinetimegear.Const.PINETIME_UUID_SERVICE
 import com.mandarinpirate.pinetimegear.ui.entities.AlertDialogData
+import com.mandarinpirate.pinetimegear.ui.entities.AppIssueType
 import com.mandarinpirate.pinetimegear.ui.entities.BluetoothDeviceUi
 import com.mandarinpirate.pinetimegear.ui.entities.IssuePermissionStatus
-import com.mandarinpirate.pinetimegear.ui.entities.AppIssueType
 import com.mandarinpirate.pinetimegear.ui.getIssueTypeByPermission
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
@@ -36,8 +36,8 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class ScanViewModel @Inject constructor(
     private val bluetoothManager: BluetoothManager,
-    private val bleScannerRepo: BleScannerRepo,
-    private val savedDeviceRepo: SavedDeviceRepo
+    private val bleScannerRepo: BleScanDataSource,
+    private val preferencesStoreRepo: PreferencesStoreRepo
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ScanState())
 
@@ -217,7 +217,7 @@ class ScanViewModel @Inject constructor(
                 val isValid = BluetoothAdapter.checkBluetoothAddress(event.device.macAddress)
                 if (isValid) {
                     viewModelScope.launch(Dispatchers.IO) {
-                        savedDeviceRepo.saveDevice(event.device.toDomainBluetoothDevice())
+                        preferencesStoreRepo.saveDevice(event.device.toDomainBluetoothDevice())
                         _sharedStateOpenNextScreen.emit(true)
                     }
                 } else {

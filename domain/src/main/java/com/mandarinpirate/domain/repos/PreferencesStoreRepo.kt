@@ -1,8 +1,12 @@
 package com.mandarinpirate.domain.repos
 
-import kotlinx.coroutines.flow.Flow
+import com.mandarinpirate.domain.models.BluetoothDevice
 
 interface PreferencesStoreRepo {
-    fun getIsItFirstAppStart(): Flow<Boolean>
-    suspend fun setIsItFirstAppStartFalse()
+    suspend fun getIsItFirstAppStart(): Boolean
+    suspend fun setFirstAppStartFalse()
+
+    suspend fun getSavedDevice(): BluetoothDevice?
+    suspend fun clearSavedDevice()
+    suspend fun saveDevice(device: BluetoothDevice)
 }

@@ -4,6 +4,6 @@ import com.mandarinpirate.domain.ScanStatus
 import com.mandarinpirate.domain.models.BleScanFilter
 import kotlinx.coroutines.flow.Flow
 
-interface BleScannerRepo {
+interface BleScanDataSource {
     fun observeBleScan(filters: List<BleScanFilter>): Flow<ScanStatus>
 }

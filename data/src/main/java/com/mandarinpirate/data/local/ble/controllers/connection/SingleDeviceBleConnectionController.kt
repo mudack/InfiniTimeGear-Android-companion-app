@@ -1,4 +1,4 @@
-package com.mandarinpirate.data.local.ble.repo
+package com.mandarinpirate.data.local.ble.controllers.connection
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
@@ -11,11 +11,10 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.util.Log
 import androidx.core.content.ContextCompat
-import com.mandarinpirate.data.local.ble.BleSingleCoroutineEvent
 import com.mandarinpirate.data.utilConnectGatt
 import com.mandarinpirate.domain.models.BleConnectionState
 import com.mandarinpirate.domain.models.BluetoothDevice
-import com.mandarinpirate.domain.repos.BleRepository
+import com.mandarinpirate.domain.repos.BleConnectionController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -29,10 +28,10 @@ import kotlinx.coroutines.sync.withLock
 import kotlin.coroutines.cancellation.CancellationException
 
 @SuppressLint("MissingPermission")
-class SingleDeviceBleRepoImpl(
+class SingleDeviceBleConnectionController(
     private val bluetoothAdapter: BluetoothAdapter,
     private val context: Context
-) : BleRepository {
+) : BleConnectionController {
 
     /** Hints for my self
      * do not lock the coroutine with a long operation
@@ -50,8 +49,7 @@ class SingleDeviceBleRepoImpl(
     private var currentGatt: BluetoothGatt? = null
     private var reconnectEnabled = false
 
-    private val events = Channel<BleSingleCoroutineEvent>(Channel.UNLIMITED)
-
+    private val events = Channel<BleEvents>(Channel.UNLIMITED)
 
     init {
         connectionScope.launch {
@@ -72,21 +70,21 @@ class SingleDeviceBleRepoImpl(
             // TODO: Handle failed event delivery if the channel is closed or trySend() fails.
             when (newState) {
                 BluetoothProfile.STATE_CONNECTED ->
-                    events.trySend(BleSingleCoroutineEvent.Connected(gatt))
+                    events.trySend(BleEvents.Connected(gatt))
 
                 BluetoothProfile.STATE_DISCONNECTED ->
-                    events.trySend(BleSingleCoroutineEvent.Disconnected(gatt, status))
+                    events.trySend(BleEvents.Disconnected(gatt, status))
             }
         }
     }
 
 
-    private suspend fun handleEvent(event: BleSingleCoroutineEvent) {
+    private suspend fun handleEvent(event: BleEvents) {
         when (event) {
-            BleSingleCoroutineEvent.BluetoothEnabled -> onBluetoothEnabled()
-            BleSingleCoroutineEvent.BluetoothDisabled -> onBluetoothDisabled()
-            is BleSingleCoroutineEvent.Connected -> onConnected(event.gatt)
-            is BleSingleCoroutineEvent.Disconnected -> onDisconnected(event.gatt, event.status)
+            BleEvents.BluetoothEnabled -> onBluetoothEnabled()
+            BleEvents.BluetoothDisabled -> onBluetoothDisabled()
+            is BleEvents.Connected -> onConnected(event.gatt)
+            is BleEvents.Disconnected -> onDisconnected(event.gatt, event.status)
         }
     }
 
@@ -100,9 +98,9 @@ class SingleDeviceBleRepoImpl(
             when (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)) {
                 BluetoothAdapter.STATE_TURNING_OFF,
                 BluetoothAdapter.STATE_OFF,
-                BluetoothAdapter.STATE_TURNING_ON -> events.trySend(BleSingleCoroutineEvent.BluetoothDisabled)
+                BluetoothAdapter.STATE_TURNING_ON -> events.trySend(BleEvents.BluetoothDisabled)
 
-                BluetoothAdapter.STATE_ON -> events.trySend(BleSingleCoroutineEvent.BluetoothEnabled)
+                BluetoothAdapter.STATE_ON -> events.trySend(BleEvents.BluetoothEnabled)
             }
         }
     }
@@ -114,7 +112,7 @@ class SingleDeviceBleRepoImpl(
         connectionMutex.withLock {
             closeCurrentGattLocked()
             activeDevice = device
-            this@SingleDeviceBleRepoImpl.reconnectEnabled = reconnectEnabled
+            this@SingleDeviceBleConnectionController.reconnectEnabled = reconnectEnabled
             registerBluetoothStateReceiverLocked()
         }
         connectToActiveDevice()

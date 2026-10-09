@@ -76,6 +76,7 @@ fun DeviceControlContent(
                 ConnectionState.CONNECTING -> ConnectingContent()
                 ConnectionState.WAITING_FOR_BLUETOOTH -> WaitingForBluetoothContent()
                 ConnectionState.RECONNECTING -> ReconnectingContent()
+                ConnectionState.ERROR -> ErrorContent(stringResource(R.string.error_something_went_wrong))
             }
         }
         Text(uiState.gattLog)
@@ -85,6 +86,10 @@ fun DeviceControlContent(
 @Composable
 fun ConnectedContent() {
     Text("Connected")
+}
+@Composable
+fun ErrorContent(error: String) {
+    Text("Error: $error")
 }
 
 @Composable

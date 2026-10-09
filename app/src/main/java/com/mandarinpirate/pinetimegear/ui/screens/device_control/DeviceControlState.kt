@@ -11,7 +11,7 @@ data class DeviceControlState(
 )
 
 enum class ConnectionState {
-    CONNECTED, DISCONNECTED, CONNECTING, WAITING_FOR_BLUETOOTH, RECONNECTING
+    CONNECTED, DISCONNECTED, CONNECTING, WAITING_FOR_BLUETOOTH, RECONNECTING, ERROR
 }
 
 fun BleConnectionState.toUiConnectionState(): ConnectionState =
@@ -21,4 +21,7 @@ fun BleConnectionState.toUiConnectionState(): ConnectionState =
         BleConnectionState.Disconnected -> ConnectionState.DISCONNECTED
         BleConnectionState.WaitingForBluetooth -> ConnectionState.WAITING_FOR_BLUETOOTH
         is BleConnectionState.Reconnecting -> ConnectionState.RECONNECTING
+        BleConnectionState.CantResolveTheDevice -> ConnectionState.ERROR
+        BleConnectionState.UnableToStartGattConnection -> ConnectionState.ERROR
+        is BleConnectionState.UndefinedBehavior -> ConnectionState.ERROR
     }

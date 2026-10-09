@@ -9,7 +9,7 @@
     <string name="ble_notification_reconnecting">Reconnecting to device…</string>
     <string name="ble_notification_cant_resolve_the_device">Can\'t resolve the device</string>
     <string name="ble_notification_unable_to_start_gatt_connection">Unable to start GATT connection</string>
-    <string name="device_control_enable_bluetooth">Enable Bluetooth</string>
+    <string name="device_control_enable_bluetooth">Enable Bluetooth!</string>
 
     <string name="fab_icon_onboarding_next_description">This is FAB button what opens scan screen</string>
 
@@ -89,5 +89,6 @@
     <string name="onboarding_text">Hello this is my companion app\nfor PineTime watch with my fork of Infinitime/Gear\n\nWelcome</string>
     <string name="scan_screen_scan_new_devices">Scan new devices</string>
     <string name="scan_screen_paired_devices">Paired devices</string>
+    <string name="error_something_went_wrong">Something went wrong…</string>
 
 </resources>

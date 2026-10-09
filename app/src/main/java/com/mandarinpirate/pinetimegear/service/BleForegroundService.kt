@@ -15,7 +15,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import com.mandarinpirate.domain.models.BleConnectionState
 import com.mandarinpirate.domain.models.BluetoothDevice
-import com.mandarinpirate.domain.repos.BleRepository
+import com.mandarinpirate.domain.repos.BleConnectionController
 import com.mandarinpirate.pinetimegear.R
 import com.mandarinpirate.pinetimegear.ui.screens._main_activity.MainActivity
 import dagger.hilt.android.AndroidEntryPoint
@@ -31,7 +31,7 @@ import kotlinx.coroutines.launch
 class BleForegroundService : Service() {
 
     @Inject
-    lateinit var bleRepository: BleRepository
+    lateinit var bleRepository: BleConnectionController
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val bleScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)

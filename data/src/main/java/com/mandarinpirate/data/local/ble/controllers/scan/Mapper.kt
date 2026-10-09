@@ -1,4 +1,4 @@
-package com.mandarinpirate.data.local.ble
+package com.mandarinpirate.data.local.ble.controllers.scan
 
 import android.bluetooth.le.ScanFilter
 import android.os.ParcelUuid

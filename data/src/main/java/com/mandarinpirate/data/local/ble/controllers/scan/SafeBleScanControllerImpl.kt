@@ -1,4 +1,4 @@
-package com.mandarinpirate.data.local.ble
+package com.mandarinpirate.data.local.ble.controllers.scan
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -10,17 +10,16 @@ import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.content.pm.PackageManager
-import androidx.annotation.IntDef
 import androidx.annotation.RequiresPermission
 import com.mandarinpirate.data.getPermissionRequiredForBleScan
-import com.mandarinpirate.domain.BleScanner
+import com.mandarinpirate.domain.BleScanController
 import com.mandarinpirate.domain.models.BleScanFilter
 import com.mandarinpirate.domain.models.BluetoothDevice
 
-class SafeBleScannerImpl(
+class SafeBleScanControllerImpl(
     bluetoothManager: BluetoothManager,
     private val context: Context
-) : BleScanner {
+) : BleScanController {
     override var isScanning = false
         private set
     private var scanCallback: ScanCallback? = null
@@ -28,7 +27,7 @@ class SafeBleScannerImpl(
     private var scanner: BluetoothLeScanner? = bluetoothAdapter.bluetoothLeScanner
 
     private var scanSettings = ScanSettings.Builder()
-        .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+        .setScanMode(BleScanMode.LOW_LATENCY.value)
         .build()
 
     @RequiresPermission(Manifest.permission.BLUETOOTH_SCAN)
@@ -119,11 +118,14 @@ class SafeBleScannerImpl(
         class BluetoothIsNotEnabled : BleScannerException()
     }
 
-    @IntDef(
-        ScanSettings.SCAN_MODE_LOW_POWER,
-        ScanSettings.SCAN_MODE_BALANCED,
-        ScanSettings.SCAN_MODE_LOW_LATENCY
-    )
-    @Retention(AnnotationRetention.SOURCE)
-    annotation class BleScanMode
+    enum class BleScanMode(val value: Int) {
+        LOW_POWER(ScanSettings.SCAN_MODE_LOW_POWER),
+        BALANCED(ScanSettings.SCAN_MODE_BALANCED),
+        LOW_LATENCY(ScanSettings.SCAN_MODE_LOW_LATENCY);
+
+        companion object {
+            fun fromValue(value: Int): BleScanMode? =
+                entries.find { it.value == value }
+        }
+    }
 }
